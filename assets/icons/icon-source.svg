@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">A highlighted line of text</title>
+  <g fill="#191919" stroke="#fff" stroke-opacity=".18" stroke-width="1.5" paint-order="stroke">
+    <rect x="34" y="27" width="60" height="10" rx="5"/>
+    <rect x="34" y="91" width="50" height="10" rx="5"/>
+  </g>
+  <rect x="16" y="49" width="96" height="30" rx="10" fill="#c5a84f"/>
+  <rect x="28" y="59" width="72" height="10" rx="5" fill="#191919"/>
+</svg>
