@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Highlights for ChatGPT",
 	"short_name": "Highlights",
-	"version": "0.3.8",
+	"version": "0.3.9",
 	"description": "Highlight useful passages in ChatGPT and return to them instantly. Stored only in this browser.",
 	"background": {
 		"service_worker": "background.js",

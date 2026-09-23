@@ -55,12 +55,18 @@ function currentLibraryMarkup(
 ) {
 	return `<main><div class="surface">
 		<header><h1>Library</h1><div class="native-controls"><button aria-label="Open filters"></button><button aria-label="Grid view" aria-pressed="false"></button><button aria-label="List view" aria-pressed="true"></button><input placeholder="Search library"><button class="native-primary">New</button></div></header>
-		<div class="new-library-scroll"><div class="sticky"><div class="tabs"><button class="native-tab bg-token-main-surface-secondary">Suggested</button><button class="native-tab">Folders</button><button class="native-tab">Images</button><button class="native-tab">All</button></div></div><div class="native-body">${body}</div></div>
+		<div class="new-library-scroll"><div class="sticky"><div class="tabs"><button class="native-tab bg-token-main-surface-secondary">Suggested</button><button class="native-tab">Favorites</button><button class="native-tab">Folders</button><button class="native-tab">Images</button><button class="native-tab">All</button></div></div><div class="native-body">${body}</div></div>
 	</div></main>`;
 }
 
 describe("Highlights Library", () => {
-	for (const selected of ["Suggested", "Folders", "Images", "All"]) {
+	for (const selected of [
+		"Suggested",
+		"Favorites",
+		"Folders",
+		"Images",
+		"All",
+	]) {
 		test(`keeps exactly one selected tab with native important utilities: ${selected}`, async () => {
 			installDom(
 				currentLibraryMarkup(),
@@ -271,7 +277,7 @@ describe("Highlights Library", () => {
 		library.observer.disconnect();
 	});
 
-	for (const label of ["Suggested", "Folders", "Images", "All"]) {
+	for (const label of ["Suggested", "Favorites", "Folders", "Images", "All"]) {
 		test(`exits Highlights through the native ${label} category`, async () => {
 			installDom(
 				currentLibraryMarkup(),

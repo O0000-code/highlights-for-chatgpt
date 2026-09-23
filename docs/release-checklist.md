@@ -81,6 +81,7 @@
 - [ ] Verify developer account email and two-factor authentication.
 - [x] Pay the Chrome Web Store one-time registration fee.
 - [x] Upload `releases/highlights-for-chatgpt-v0.3.8.zip` as a new draft item.
+- [ ] Upload `releases/highlights-for-chatgpt-v0.3.9.zip` to the existing draft.
 - [x] Prepare three sanitized 1280×800 screenshots and the 440×280 promotional tile.
 - [ ] Upload the prepared screenshots and promotional tile.
 - [ ] Complete website-content, personal-communications, user-activity, and

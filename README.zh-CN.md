@@ -17,7 +17,7 @@
 <br/>
 
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-000?style=flat-square" alt="MIT license"/></a>
-<img src="https://img.shields.io/badge/version-0.3.8-000?style=flat-square" alt="v0.3.8"/>
+<img src="https://img.shields.io/badge/version-0.3.9-000?style=flat-square" alt="v0.3.9"/>
 <img src="https://img.shields.io/badge/privacy-local_only-000?style=flat-square" alt="Local only"/>
 <img src="https://img.shields.io/badge/browser-Chromium-000?style=flat-square" alt="Chromium"/>
 

@@ -1428,7 +1428,7 @@ function findNativeTabGroup(anchor: HTMLElement) {
 				!button.closest(`[${UI_ATTRIBUTE}], [hidden], [aria-hidden='true']`),
 		);
 	const knownLabel =
-		/^(All|Images|Documents|Files|Suggested|Folders|全部|所有|图片|圖像|文档|文件|推荐|建議|文件夹|資料夾)$/;
+		/^(All|Images|Documents|Files|Suggested|Favorites|Folders|全部|所有|图片|圖像|文档|文件|推荐|建議|收藏|我的最爱|我的最愛|文件夹|資料夾)$/;
 	const candidates = new Set<HTMLElement>(
 		anchor.querySelectorAll<HTMLElement>("[role='tablist']"),
 	);
