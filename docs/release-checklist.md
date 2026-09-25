@@ -78,7 +78,7 @@
 
 - [x] Replace the privacy-policy Contact placeholder with public support details.
 - [x] Publish the privacy policy at a stable HTTPS URL.
-- [ ] Verify the publisher's public contact email.
+- [x] Verify the publisher's public contact email.
 - [x] Pay the Chrome Web Store one-time registration fee.
 - [x] Upload `releases/highlights-for-chatgpt-v0.3.8.zip` as a new draft item.
 - [x] Upload `releases/highlights-for-chatgpt-v0.3.9.zip` to the existing draft.
@@ -88,4 +88,4 @@
   conversation URLs as locally handled data; do not claim user-activity tracking.
 - [x] Confirm single-purpose and site-access rationales.
 - [x] Confirm the listing says the extension is independent and not affiliated with OpenAI.
-- [ ] Submit for review after contact-email verification and final disclosure review.
+- [x] Submit version 0.3.9 for review with automatic publication after approval.

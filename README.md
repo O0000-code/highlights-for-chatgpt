@@ -101,7 +101,7 @@ Read the full [privacy policy](PRIVACY.md) and [support guidance](SUPPORT.md).
 
 ## Install
 
-The Chrome Web Store listing is being prepared. To install from source now:
+The Chrome Web Store listing is under review. Until it is approved, install from source:
 
 ```bash
 git clone https://github.com/O0000-code/highlights-for-chatgpt.git

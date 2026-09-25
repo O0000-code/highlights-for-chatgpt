@@ -93,7 +93,7 @@ ChatGPT 当前加载的组件尺寸与主题变量，并为宿主变化保留隔
 
 ## 安装
 
-Chrome 应用商店页面正在准备中。现在可从源码安装：
+Chrome 应用商店页面正在审核中。审核通过前，可从源码安装：
 
 ```bash
 git clone https://github.com/O0000-code/highlights-for-chatgpt.git
