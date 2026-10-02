@@ -60,6 +60,146 @@ function currentLibraryMarkup(
 }
 
 describe("Highlights Library", () => {
+	test("synchronizes native selected/suppress flags as well as aria state, without replacing the controls", async () => {
+		const dom = installDom(
+			currentLibraryMarkup(),
+			"https://chatgpt.com/library?view=highlights",
+		);
+		const grid = document.querySelector<HTMLButtonElement>(
+			"[aria-label='Grid view']",
+		) as HTMLButtonElement;
+		const list = document.querySelector<HTMLButtonElement>(
+			"[aria-label='List view']",
+		) as HTMLButtonElement;
+		grid.className = list.className = "native-button";
+		grid.setAttribute("data-selected", "");
+		list.setAttribute("data-suppress-active-style", "");
+		grid.setAttribute("aria-pressed", "true");
+		list.setAttribute("aria-pressed", "false");
+		const library = initHighlightLibrary({
+			loadRecords: async () => [record],
+			poll: false,
+		});
+		await Promise.resolve();
+		expect(grid.hasAttribute("data-selected")).toBe(false);
+		expect(grid.hasAttribute("data-suppress-active-style")).toBe(true);
+		expect(list.hasAttribute("data-selected")).toBe(true);
+		expect(list.hasAttribute("data-suppress-active-style")).toBe(false);
+		grid.click();
+		expect(document.querySelector(".highlights-library-grid")).not.toBeNull();
+		expect(grid.hasAttribute("data-selected")).toBe(true);
+		expect(list.hasAttribute("data-selected")).toBe(false);
+		expect(document.querySelector("[aria-label='Grid view']")).toBe(grid);
+		document.querySelector<HTMLElement>(".tabs button")?.click();
+		library.reconcile();
+		expect(grid.getAttribute("data-selected")).toBe("");
+		expect(grid.hasAttribute("data-suppress-active-style")).toBe(false);
+		expect(list.hasAttribute("data-selected")).toBe(false);
+		expect(list.getAttribute("data-suppress-active-style")).toBe("");
+		library.observer.disconnect();
+		await dom.window.happyDOM.abort();
+	});
+	test("keeps the refreshed view-button visual selection in sync and restores native classes on exit", async () => {
+		const dom = installDom(
+			currentLibraryMarkup(),
+			"https://chatgpt.com/library?view=highlights",
+		);
+		const grid = document.querySelector<HTMLButtonElement>(
+			"[aria-label='Grid view']",
+		) as HTMLButtonElement;
+		const list = document.querySelector<HTMLButtonElement>(
+			"[aria-label='List view']",
+		) as HTMLButtonElement;
+		grid.className =
+			"native-grid-control circle hover:bg-primary-ghost-hover bg-primary-ghost-hover";
+		list.className = "native-list-control circle hover:bg-primary-ghost-hover";
+		grid.setAttribute("aria-pressed", "true");
+		list.setAttribute("aria-pressed", "false");
+		const original = [grid.className, list.className];
+		const library = initHighlightLibrary({
+			loadRecords: async () => [record],
+			poll: false,
+		});
+		await Promise.resolve();
+		expect(document.querySelector(".highlights-library-groups")).not.toBeNull();
+		expect(grid.classList.contains("bg-primary-ghost-hover")).toBe(false);
+		expect(list.classList.contains("bg-primary-ghost-hover")).toBe(true);
+		grid.click();
+		expect(document.querySelector(".highlights-library-grid")).not.toBeNull();
+		expect(grid.classList.contains("bg-primary-ghost-hover")).toBe(true);
+		expect(list.classList.contains("bg-primary-ghost-hover")).toBe(false);
+		list.click();
+		expect(document.querySelector(".highlights-library-groups")).not.toBeNull();
+		expect(grid.classList.contains("bg-primary-ghost-hover")).toBe(false);
+		expect(list.classList.contains("bg-primary-ghost-hover")).toBe(true);
+		document.querySelector<HTMLElement>(".tabs button")?.click();
+		library.reconcile();
+		expect([grid.className, list.className]).toEqual(original);
+		expect(grid.getAttribute("aria-pressed")).toBe("true");
+		expect(list.getAttribute("aria-pressed")).toBe("false");
+		library.observer.disconnect();
+		await dom.window.happyDOM.abort();
+	});
+
+	test("partial Space selection paints only the selected passage, not the summary or its conversation", async () => {
+		const dom = installDom(
+			`<style>main { --color-background-primary-ghost-hover: rgb(230,230,230); }</style>${currentLibraryMarkup('<div role="grid"><div role="row" aria-selected="false"><span><button role="checkbox" class="icon-2xs rounded-xs"></button></span>Native file</div></div>')}`,
+			"https://chatgpt.com/space?view=highlights",
+		);
+		const library = initHighlightLibrary({
+			loadRecords: async () => [record, sameConversation],
+			poll: false,
+		});
+		await Promise.resolve();
+		document
+			.querySelector<HTMLInputElement>(`[data-select-highlight='${record.id}']`)
+			?.click();
+		const summary = document.querySelector<HTMLElement>(
+			".highlights-library-selection-summary",
+		) as HTMLElement;
+		const header = document.querySelector<HTMLElement>(
+			".highlights-library-group > header",
+		) as HTMLElement;
+		const selected = document
+			.querySelector<HTMLInputElement>(`[data-select-highlight='${record.id}']`)
+			?.closest(".highlights-library-record-row") as HTMLElement;
+		expect(header.dataset.selected).toBe("false");
+		expect(header.dataset.selectionState).toBe("some");
+		expect(
+			document.querySelector<HTMLInputElement>("[data-select-thread]")
+				?.indeterminate,
+		).toBe(true);
+		expect(getComputedStyle(summary).backgroundColor).not.toBe(
+			"rgb(230, 230, 230)",
+		);
+		expect(getComputedStyle(header).backgroundColor).not.toBe(
+			"rgb(230, 230, 230)",
+		);
+		expect(getComputedStyle(selected).backgroundColor).toBe(
+			"rgb(230, 230, 230)",
+		);
+		document
+			.querySelector<HTMLInputElement>(
+				`[data-select-highlight='${sameConversation.id}']`,
+			)
+			?.click();
+		const fullHeader = document.querySelector<HTMLElement>(
+			".highlights-library-group > header",
+		) as HTMLElement;
+		expect(fullHeader.dataset.selectionState).toBe("all");
+		expect(getComputedStyle(fullHeader).backgroundColor).toBe(
+			"rgb(230, 230, 230)",
+		);
+		expect(
+			getComputedStyle(
+				document.querySelector<HTMLElement>(
+					".highlights-library-selection-summary",
+				) as HTMLElement,
+			).backgroundColor,
+		).not.toBe("rgb(230, 230, 230)");
+		library.observer.disconnect();
+		await dom.window.happyDOM.abort();
+	});
 	test("extends the Space tab wrappers, preserves its route, and restores native content on exit", async () => {
 		const dom = installDom(
 			`<nav><h1>Space</h1></nav><main><header><h1>All</h1><input type="search" placeholder="Search"><button>New</button></header><div><div role="tablist" aria-label="Library sections"><div class="native-tab-wrapper"><button role="tab" aria-selected="true" class="native-active">Suggested</button></div><div class="native-tab-wrapper"><button role="tab" class="native-inactive">Favorites</button></div><div class="native-tab-wrapper"><button role="tab" class="native-inactive">Your items</button></div><div class="native-tab-wrapper"><button role="tab" class="native-inactive">Shared with you</button></div></div><button aria-label="Grid view"></button><button aria-label="List view"></button></div><div class="native-body"><div role="grid"><div role="row" aria-selected="false">Native Space file</div></div></div></main>`,

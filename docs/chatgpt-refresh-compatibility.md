@@ -34,3 +34,19 @@ No signed-in conversation content, browser profile, downloaded personal export,
 or real-page screenshot is included in the source repository or release package.
 These checks cover this host revision and the tested paths; future ChatGPT DOM
 changes may require another compatibility update.
+
+## Selection-state corrections — 0.3.11
+
+The follow-up review found gaps in the cold-grid fallback and partial-selection
+matrix. List controls now have an independent transparent fallback instead of
+borrowing the grid's white surface. Cached classic row/column classes are not
+combined with Space components. Checkbox visibility is scoped to its own
+hovered/focused row, with selected and mixed controls retained.
+
+Only selected passages and fully selected conversations receive selection fill;
+the summary remains neutral and a partially selected conversation is indicated
+by its mixed checkbox. Native view controls synchronize both their style tokens
+and the refreshed `data-selected` / `data-suppress-active-style` attributes with
+the displayed content, restoring the original nodes and attributes on exit.
+
+The automated matrix now includes 91 tests covering these regressions.

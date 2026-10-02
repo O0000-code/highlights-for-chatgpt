@@ -70,6 +70,9 @@ interface NativeControlBinding {
 }
 
 const MANAGED_NATIVE_CONTROL_ATTRIBUTES = [
+	"class",
+	"data-selected",
+	"data-suppress-active-style",
 	"aria-expanded",
 	"aria-pressed",
 	"aria-controls",
@@ -828,6 +831,53 @@ function syncNativeControlState(
 	parts: NativeLibraryParts,
 	state: LibraryState,
 ) {
+	const viewBindings = ["grid", "list"]
+		.map((view) => getNativeControlBinding(parts, view as LibraryView))
+		.filter((binding): binding is NativeControlBinding => Boolean(binding));
+	const selected = viewBindings.find(
+		(binding) => binding.baseline.get("aria-pressed") === "true",
+	);
+	const unselected = viewBindings.find((binding) => binding !== selected);
+	const hasNativeSelectionFlags = viewBindings.some(
+		(binding) =>
+			(binding.baseline.get("data-selected") !== null &&
+				binding.baseline.get("data-selected") !== undefined) ||
+			(binding.baseline.get("data-suppress-active-style") !== null &&
+				binding.baseline.get("data-suppress-active-style") !== undefined),
+	);
+	if (hasNativeSelectionFlags) {
+		for (const binding of viewBindings) {
+			binding.button.toggleAttribute(
+				"data-selected",
+				binding.kind === state.view,
+			);
+			binding.button.toggleAttribute(
+				"data-suppress-active-style",
+				binding.kind !== state.view,
+			);
+		}
+	}
+	if (selected && unselected) {
+		const selectedClasses = new Set(
+			(selected.baseline.get("class") ?? "").split(/\s+/).filter(Boolean),
+		);
+		const unselectedClasses = new Set(
+			(unselected.baseline.get("class") ?? "").split(/\s+/).filter(Boolean),
+		);
+		const isStateStyle = (name: string) =>
+			/^(?:!)?(?:bg|text|border|ring|opacity|shadow)-/.test(name);
+		const on = [...selectedClasses].filter(
+			(name) => !unselectedClasses.has(name) && isStateStyle(name),
+		);
+		const off = [...unselectedClasses].filter(
+			(name) => !selectedClasses.has(name) && isStateStyle(name),
+		);
+		for (const binding of viewBindings) {
+			for (const name of [...on, ...off]) binding.button.classList.remove(name);
+			for (const name of binding.kind === state.view ? on : off)
+				binding.button.classList.add(name);
+		}
+	}
 	for (const view of ["grid", "list"] as const) {
 		getNativeControl(parts, view)?.setAttribute(
 			"aria-pressed",
@@ -1184,7 +1234,7 @@ function renderConversationGroup(
 	).length;
 	return `
 		<section class="highlights-library-group" role="listitem" data-conversation-group="${escapeAttribute(group.threadId)}">
-			<header data-selected="${selected > 0}">
+			<header data-selected="${selected === group.records.length}" data-selection-state="${selected === group.records.length ? "all" : selected > 0 ? "some" : "none"}">
 				<label class="highlights-library-check"><input type="checkbox" data-select-thread="${escapeAttribute(group.threadId)}" aria-label="Select conversation ${escapeAttribute(group.title)}" ${selected === group.records.length ? "checked" : ""}></label>
 				<div class="highlights-library-group-title"><span class="highlights-library-icon-slot" aria-hidden="true"></span><div class="min-w-0 flex-1 overflow-hidden"><strong>${escapeHtml(group.title)}</strong>${renderCompactDate(group.latestSavedAt)}</div></div>
 				<time class="highlights-library-date" datetime="${new Date(group.latestSavedAt).toISOString()}">${formatLibraryDate(group.latestSavedAt)}</time><span aria-hidden="true"></span>
@@ -1809,9 +1859,21 @@ function ensureStyles() {
 		.highlights-library-popover > button:hover { background: var(--color-background-primary-ghost-hover, var(--interactive-bg-tertiary-hover, #f9f9f9)); }
 		[data-highlights-space-library='true'] .highlights-library-groups { margin-inline: calc(-1 * var(--padding-row-cell-x, var(--padding-row-x, 8px))); }
 		[data-highlights-space-library='true'] .highlights-library-selection-summary { font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+		[data-highlights-space-library='true'] .highlights-library-native-check { opacity: 0; pointer-events: none; transition: opacity 150ms ease; }
+		[data-highlights-space-library='true'] .highlights-library-native-check[data-highlights-check-selected='true'],
+		[data-highlights-space-library='true'] .highlights-library-native-check:focus-within,
+		[data-highlights-space-library='true'] .highlights-library-check:hover > .highlights-library-native-check,
+		[data-highlights-space-library='true'] .highlights-library-record-row:is(:hover,:focus-within) > .highlights-library-check > .highlights-library-native-check,
+		[data-highlights-space-library='true'] .highlights-library-group > header:is(:hover,:focus-within) > .highlights-library-check > .highlights-library-native-check,
+		[data-highlights-space-library='true'] .highlights-library-selection-summary:is(:hover,:focus-within) > .highlights-library-check > .highlights-library-native-check,
+		[data-highlights-space-library='true'] .highlights-library-card:is(:hover,:focus-within) > .highlights-library-card-selection-layer > .highlights-library-check > .highlights-library-native-check { opacity: 1; pointer-events: auto; }
+		[data-highlights-space-library='true'] .highlights-library-check[data-highlights-check-kind='list'] { position: absolute; inset-block: 0; inset-inline-start: -24px; inset-inline-end: auto; width: 24px; display: flex; align-items: center; }
 		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header) { display: grid; grid-template-columns: minmax(0,1fr) 160px 64px; min-height: 50px; gap: 16px; padding: var(--padding-row-y, 5px) var(--padding-row-cell-x, var(--padding-row-x, 8px)); border-radius: 12px; color: var(--color-text); }
 		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header)::before { content: none; }
-		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header):hover, [data-highlights-space-library='true'] [data-selected='true'] { background: var(--color-background-primary-ghost-hover); }
+		[data-highlights-space-library='true'] .highlights-library-record-row:hover,
+		[data-highlights-space-library='true'] .highlights-library-group > header:hover,
+		[data-highlights-space-library='true'] .highlights-library-record-row[data-selected='true'],
+		[data-highlights-space-library='true'] .highlights-library-group > header[data-selected='true'] { background: var(--color-background-primary-ghost-hover); }
 		[data-highlights-space-library='true'] .highlights-library-native-check[data-highlights-check-kind='list'] input { width: 16px; height: 16px; border-radius: 2px; border-color: var(--color-border-strong); }
 		[data-highlights-space-library='true'] .highlights-library-native-check span { color: var(--color-text); background: var(--color-text); }
 		[data-highlights-space-library='true'] .highlights-library-check [data-highlights-checkbox-bridge] { width: 8px; inset-inline-start: 16px; }

@@ -53,6 +53,10 @@ const SPACE_GRID =
 	"relative grid grid-cols-[repeat(var(--masonry-columns),minmax(0,1fr))] items-start gap-3 [--masonry-columns:1] sm:gap-4 @sm:[--masonry-columns:2] @xl:[--masonry-columns:3] @3xl:[--masonry-columns:4] @5xl:[--masonry-columns:5] @7xl:[--masonry-columns:6]";
 const SPACE_GRID_TILE =
 	"relative aspect-square w-full overflow-hidden rounded-2xl border bg-surface-elevated border-subtle shadow-card";
+const SPACE_LIST_INPUT =
+	"peer shrink-0 outline-none transition-[background-color,border-color,box-shadow] icon-2xs rounded-xs data-[state=checked]:bg-primary-soft data-[state=indeterminate]:bg-primary-soft border border-strong shadow-sm data-[state=checked]:text-default data-[state=indeterminate]:text-default focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 aria-invalid:ring-2 aria-invalid:ring-text-danger/20 aria-invalid:border-text-danger disabled:cursor-not-allowed hover:bg-surface-tertiary cursor-interaction";
+const SPACE_GRID_INPUT =
+	"peer shrink-0 outline-none transition-[background-color,border-color,box-shadow] size-5 rounded-full bg-surface disabled:bg-surface-secondary border border-strong shadow-sm data-[state=checked]:text-default data-[state=indeterminate]:text-default focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 aria-invalid:ring-2 aria-invalid:ring-text-danger/20 aria-invalid:border-text-danger disabled:cursor-not-allowed hover:bg-surface-tertiary cursor-interaction";
 const GRID_SELECTED =
 	"border-black ring-2 ring-black dark:border-white dark:ring-white";
 const GRID_INPUT_SELECTED =
@@ -152,12 +156,14 @@ export function applyNativeLibraryComponents(
 	view: "list" | "grid",
 	components: NativeLibraryComponents,
 ) {
-	const c = components.classes;
 	const space = Boolean(
 		components.spaceRowClass ||
 			components.spaceCheckboxClass ||
 			components.spaceGridCheckboxClass,
 	);
+	// A warm Space document may also retain classic Library stylesheets. Mixing
+	// those row/column classes paints an extra surface into the selection gutter.
+	const c = space ? {} : components.classes;
 	root.dataset.highlightsSpaceLibrary = String(space);
 	if (space) root.classList.add("@container");
 	root.dataset.highlightsNativeRows = String(Boolean(c.selectableRow));
@@ -306,9 +312,16 @@ export function applyNativeLibraryComponents(
 		}
 		addClasses(shell, "highlights-library-native-check");
 		shell.dataset.highlightsCheckKind = isGrid ? "grid" : "list";
+		shell.dataset.highlightsCheckSelected = String(checked || mixed);
 		// Only dynamic visibility/selection classes are owned here; all native
 		// geometry, themed colors, focus rings and glyph styles remain untouched.
-		if (isGrid && !space) {
+		if (space) {
+			// Visibility belongs to the hovered/focused row, not any host .group.
+			for (const name of Array.from(shell.classList)) {
+				if (name.includes("opacity") || name.includes("pointer-events"))
+					shell.classList.remove(name);
+			}
+		} else if (isGrid) {
 			for (const name of [
 				...GRID_INPUT_SELECTED.split(" "),
 				"opacity-0",
@@ -358,6 +371,7 @@ export function applyNativeLibraryComponents(
 				?.classList.add("highlights-library-grid-mixed");
 		const dock = input.parentElement;
 		if (dock?.classList.contains("highlights-library-check")) {
+			dock.dataset.highlightsCheckKind = isGrid ? "grid" : "list";
 			addClasses(
 				dock,
 				isGrid
@@ -392,13 +406,9 @@ function createSpaceCheckboxTemplate(
 		components.spaceCheckboxShellClass ?? "relative flex items-center";
 	const input = doc.createElement("input");
 	input.type = "checkbox";
-	input.className =
-		(grid
-			? components.spaceGridCheckboxClass
-			: components.spaceCheckboxClass) ??
-		components.spaceCheckboxClass ??
-		components.spaceGridCheckboxClass ??
-		"";
+	input.className = grid
+		? (components.spaceGridCheckboxClass ?? SPACE_GRID_INPUT)
+		: (components.spaceCheckboxClass ?? SPACE_LIST_INPUT);
 	input.style.appearance = "none";
 	input.style.margin = "0";
 	input.style.width = grid ? "20px" : "16px";
@@ -413,6 +423,9 @@ function createSpaceCheckboxTemplate(
 		fallback.style.width = "17px";
 		fallback.style.height = "17px";
 		fallback.style.pointerEvents = "none";
+		fallback.style.left = "50%";
+		fallback.style.top = "50%";
+		fallback.style.transform = "translate(-50%, -50%)";
 		shell.append(input, fallback);
 	} else shell.append(input);
 	return shell;

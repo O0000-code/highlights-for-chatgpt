@@ -163,6 +163,85 @@ describe("Native Library component reuse", () => {
 			root.querySelector<HTMLInputElement>("[data-select-all]")?.style
 				.borderRadius,
 		).toBe("2px");
+		expect(
+			root
+				.querySelector<HTMLInputElement>("[data-select-all]")
+				?.classList.contains("native-grid-check"),
+		).toBe(false);
+		expect(
+			root
+				.querySelector<HTMLInputElement>("[data-select-all]")
+				?.classList.contains("bg-surface"),
+		).toBe(false);
+		expect(
+			root
+				.querySelector<HTMLInputElement>("[data-select-thread]")
+				?.classList.contains("native-grid-check"),
+		).toBe(true);
+	});
+
+	test("does not mix cached classic row surfaces into refreshed Space rows", () => {
+		fixture = installDom(
+			`<style>.cached_selectableRow { padding: 99px; background-color: rgb(255,0,0); }.cached_desktopListColumnsWithoutSize { grid-template-columns: 1fr 50px; }.native-space-row { padding: 5px 8px; background-color: transparent; }</style><main><div role="grid"><div role="row" aria-selected="false" class="native-space-row"><span><button role="checkbox" class="icon-2xs rounded-xs"></button></span>Native file</div></div></main>`,
+		);
+		const anchor = requireElement<HTMLElement>("main");
+		const components = captureNativeLibraryComponents(anchor);
+		expect(components.classes.selectableRow).toBe("cached_selectableRow");
+		const root = createHighlightRoot(anchor, "list");
+		applyNativeLibraryComponents(root, "list", components);
+		const row = requireElement(".highlights-library-record-row");
+		expect(row.classList.contains("cached_selectableRow")).toBe(false);
+		expect(row.classList.contains("cached_desktopListColumnsWithoutSize")).toBe(
+			false,
+		);
+		expect(getComputedStyle(row).padding).toBe("5px 8px");
+		expect(getComputedStyle(row).backgroundColor).toBe("transparent");
+	});
+
+	test("hides unselected Space controls and retains only the selected controls across rerenders", async () => {
+		fixture = installDom(
+			`<main class="group"><header><h1>All</h1><input type="search" placeholder="Search"><button>New</button></header><div role="tablist"><button role="tab" aria-selected="true">Suggested</button><button role="tab">Your items</button></div><div><div data-masonry-item="synthetic"><span class="relative flex items-center opacity-0 group-hover:opacity-100"><button role="checkbox" class="size-5 rounded-full bg-surface"></button></span></div></div></main>`,
+			"https://chatgpt.com/space?view=highlights",
+		);
+		const record: HighlightRecord = {
+			id: "space-one",
+			schemaVersion: DATA_SCHEMA_VERSION,
+			threadId: "chatgpt:space",
+			url: "https://chatgpt.com/c/space",
+			text: "First useful passage",
+			prefix: "",
+			suffix: "",
+			color: "blue",
+			createdAt: 1,
+			updatedAt: 1,
+		};
+		controller = initHighlightLibrary({
+			loadRecords: async () => [
+				record,
+				{ ...record, id: "space-two", text: "Second useful passage" },
+			],
+			poll: false,
+		});
+		controller.observer.disconnect();
+		await Promise.resolve();
+		const getInput = (id: string) =>
+			requireElement<HTMLInputElement>(`[data-select-highlight='${id}']`);
+		const getShell = (id: string) => getInput(id).parentElement as HTMLElement;
+		expect(getComputedStyle(getShell("space-one")).opacity).toBe("0");
+		expect(getComputedStyle(getShell("space-two")).opacity).toBe("0");
+		expect(
+			Array.from(getShell("space-one").classList).some((name) =>
+				name.includes("group-hover"),
+			),
+		).toBe(false);
+		getInput("space-one").click();
+		expect(getInput("space-one").checked).toBe(true);
+		expect(getComputedStyle(getShell("space-one")).opacity).toBe("1");
+		expect(getComputedStyle(getShell("space-two")).opacity).toBe("0");
+		expect(
+			getInput("space-one").closest("label")?.dataset.highlightsCheckKind,
+		).toBe("list");
+		expect(document.querySelector(".highlights-library-detail")).toBeNull();
 	});
 	for (const prefix of ["liveAlpha91", "liveBeta27"]) {
 		test(`uses the runtime stylesheet classes from ${prefix}`, () => {

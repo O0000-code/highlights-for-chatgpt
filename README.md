@@ -18,7 +18,7 @@ exact jump-back, a Library, and local export.
 <br/>
 
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-000?style=flat-square" alt="MIT license"/></a>
-<img src="https://img.shields.io/badge/version-0.3.10-000?style=flat-square" alt="v0.3.10"/>
+<img src="https://img.shields.io/badge/version-0.3.11-000?style=flat-square" alt="v0.3.11"/>
 <img src="https://img.shields.io/badge/privacy-local_only-000?style=flat-square" alt="Local only"/>
 <img src="https://img.shields.io/badge/browser-Chromium-000?style=flat-square" alt="Chromium"/>
 
@@ -102,7 +102,8 @@ Read the full [privacy policy](PRIVACY.md) and [support guidance](SUPPORT.md).
 ## Install
 
 Install the approved version from the [Chrome Web Store](https://chromewebstore.google.com/detail/highlights-for-chatgpt/ickelkpfjfeancinmfbldmfimokjjjmg).
-Version 0.3.10 adapts to the refreshed ChatGPT conversation and Space interfaces.
+Version 0.3.11 adapts to the refreshed ChatGPT conversation and Space interfaces,
+including native selection controls and list/grid state.
 To install the current source version:
 
 ```bash
