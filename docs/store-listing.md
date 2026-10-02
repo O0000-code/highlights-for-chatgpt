@@ -105,7 +105,7 @@ Certification:
 ## Submission placeholders
 
 - Proposed public repository: `https://github.com/O0000-code/highlights-for-chatgpt`.
-- Proposed privacy policy URL: `https://github.com/O0000-code/highlights-for-chatgpt/blob/main/PRIVACY.md`.
+- Privacy policy URL: `https://raw.githubusercontent.com/O0000-code/highlights-for-chatgpt/main/PRIVACY.md`.
 - Proposed support URL: `https://github.com/O0000-code/highlights-for-chatgpt/issues`.
 - Publisher contact email: add in the developer dashboard; do not commit a private address.
 

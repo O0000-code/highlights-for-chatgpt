@@ -50,3 +50,10 @@ and the refreshed `data-selected` / `data-suppress-active-style` attributes with
 the displayed content, restoring the original nodes and attributes on exit.
 
 The automated matrix now includes 91 tests covering these regressions.
+
+Signed-in follow-up checks confirmed a transparent, initially hidden list
+checkbox with an 8px gutter between its right edge and the row surface. With
+one passage selected, the summary and partially selected conversation remained
+transparent while the passage received the native 5% neutral fill. List/grid
+round-trips retained the selection and matched the displayed content to the
+native selected flags and button-surface opacity.
