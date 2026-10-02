@@ -237,7 +237,6 @@ export function initHighlightLibrary(options?: {
 			return;
 		}
 		const url = new URL(window.location.href);
-		url.pathname = "/library";
 		url.searchParams.set(LIBRARY_PARAMETER, LIBRARY_VALUE);
 		window.history.pushState(window.history.state, "", url);
 		reconcile();
@@ -301,7 +300,14 @@ function ensureNativeTab(parts: NativeLibraryParts, onActivate: () => void) {
 		event.stopPropagation();
 		onActivate();
 	});
-	reference.after(tab);
+	const referenceWrapper = reference.parentElement;
+	if (referenceWrapper && referenceWrapper.parentElement === parts.tabs) {
+		const wrapper = referenceWrapper.cloneNode(false) as HTMLElement;
+		wrapper.removeAttribute("id");
+		wrapper.setAttribute(UI_ATTRIBUTE, "true");
+		wrapper.append(tab);
+		referenceWrapper.after(wrapper);
+	} else reference.after(tab);
 	syncNativeTabs(false, parts.nativeTabs);
 	return tab;
 }
@@ -569,7 +575,14 @@ function mountInNativeContentSurface(
 		if (bodies.length) break;
 		branch = branch.parentElement;
 	}
-	const nativeBody = bodies[0];
+	const nativeBody =
+		bodies.find(
+			(body) =>
+				body.matches("[role='grid'],table") ||
+				body.querySelector(
+					"[role='grid'],table,[data-masonry-item],[data-library-item]",
+				),
+		) ?? bodies[0];
 	if (!nativeBody) return;
 	// Reuse content gutters, but never clone table/grid semantics into our host.
 	const host = existing ?? document.createElement("div");
@@ -1410,7 +1423,7 @@ function findHeading() {
 	return Array.from(document.querySelectorAll<HTMLElement>("h1, h2"))
 		.filter(
 			(element) =>
-				/^(Library|资料库|資源庫|资源库)$/.test(
+				/^(Library|资料库|資源庫|资源库|All|全部|所有)$/.test(
 					element.textContent?.trim() ?? "",
 				) &&
 				!element.closest(`[${UI_ATTRIBUTE}], [hidden], [aria-hidden='true']`),
@@ -1609,7 +1622,7 @@ function stripHighlightViewParameter() {
 function isLibraryRoute() {
 	return (
 		window.location.hostname === "chatgpt.com" &&
-		window.location.pathname === "/library"
+		["/library", "/space"].includes(window.location.pathname.replace(/\/$/, ""))
 	);
 }
 
@@ -1755,6 +1768,7 @@ function ensureStyles() {
 		.highlights-library-selection-actions button { border: 0; padding: 4px 8px; border-radius: 6px; color: inherit; background: transparent; cursor: pointer; }
 		.highlights-library-selection-actions button:hover { background: var(--interactive-bg-secondary-hover); }
 		.highlights-library-native-check:focus-within { opacity: 1; pointer-events: auto; }
+		.highlights-library-check:hover .highlights-library-native-check, .highlights-library-check:focus-within .highlights-library-native-check { opacity: 1; pointer-events: auto; }
 		.highlights-library-native-check[data-highlights-check-kind='grid']:focus-within input { opacity: 1; }
 		.highlights-library-native-check[data-highlights-check-kind='grid'] input:indeterminate + svg { opacity: 0; }
 		.highlights-library-native-check .highlights-library-grid-mixed { background: #000; }
@@ -1790,6 +1804,19 @@ function ensureStyles() {
 		:where([data-highlights-native-rows='false']) :is(.highlights-library-record-row, .highlights-library-group > header)::before { content: ''; position: absolute; inset: -1px var(--page-table-row-inset, -12px); pointer-events: none; border-radius: var(--radius-2xl, 16px); background: var(--interactive-bg-secondary-hover, #0000000d); opacity: 0; transition: opacity .15s cubic-bezier(.4,0,.2,1); }
 		:where([data-highlights-native-rows='false']) :is(.highlights-library-record-row, .highlights-library-group > header):hover::before, :where([data-highlights-native-rows='false']) [data-selected='true']::before { opacity: 1; }
 		:where([data-highlights-native-rows='false']) [data-selected='true']::before { background: var(--interactive-bg-secondary-selected, #0000000d); }
+		#${ROOT_ID}[data-highlights-space-library='true'] { --text-primary: var(--color-text); --text-secondary: var(--color-text-secondary); --text-tertiary: var(--color-text-secondary); --border-light: var(--color-border); --border-default: var(--color-border-strong); --bg-primary: var(--color-surface-elevated-secondary); color: var(--color-text); }
+		.highlights-library-popover { color: var(--color-text, var(--text-primary, #0d0d0d)); background: var(--color-surface-elevated-secondary, var(--bg-primary, #fff)); border-color: var(--color-border, var(--border-light, rgba(0,0,0,.05))); }
+		.highlights-library-popover > button:hover { background: var(--color-background-primary-ghost-hover, var(--interactive-bg-tertiary-hover, #f9f9f9)); }
+		[data-highlights-space-library='true'] .highlights-library-groups { margin-inline: calc(-1 * var(--padding-row-cell-x, var(--padding-row-x, 8px))); }
+		[data-highlights-space-library='true'] .highlights-library-selection-summary { font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header) { display: grid; grid-template-columns: minmax(0,1fr) 160px 64px; min-height: 50px; gap: 16px; padding: var(--padding-row-y, 5px) var(--padding-row-cell-x, var(--padding-row-x, 8px)); border-radius: 12px; color: var(--color-text); }
+		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header)::before { content: none; }
+		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header):hover, [data-highlights-space-library='true'] [data-selected='true'] { background: var(--color-background-primary-ghost-hover); }
+		[data-highlights-space-library='true'] .highlights-library-native-check[data-highlights-check-kind='list'] input { width: 16px; height: 16px; border-radius: 2px; border-color: var(--color-border-strong); }
+		[data-highlights-space-library='true'] .highlights-library-native-check span { color: var(--color-text); background: var(--color-text); }
+		[data-highlights-space-library='true'] .highlights-library-check [data-highlights-checkbox-bridge] { width: 8px; inset-inline-start: 16px; }
+		[data-highlights-space-library='true'] :is(.highlights-library-record-row > button, .highlights-library-card-records button) { color: var(--color-text); }
+		[data-highlights-space-library='true'] .highlights-library-date { color: var(--color-text-secondary); }
 		:where([data-highlights-native-grid='false']) .highlights-library-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
 		:where([data-highlights-native-grid='false']) .highlights-library-card-tile { position: relative; width: 100%; aspect-ratio: 1; border: 1px solid var(--border-light, #0000000d); border-radius: 16px; background: var(--bg-primary, #fff); box-shadow: var(--shadow-elevation-01, 0 1px 3px #0000000d); }
 		:where([data-highlights-native-grid='false']) .highlights-library-card[data-selected='true'] .highlights-library-card-tile { border-color: var(--text-primary, #000); outline: 2px solid var(--text-primary, #000); }

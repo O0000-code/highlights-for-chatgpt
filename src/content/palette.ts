@@ -197,11 +197,11 @@ function ensureStyles() {
 	style.dataset.highlightsUi = "true";
 	style.textContent = `
 		#${PALETTE_ID} {
-			--palette-surface: var(--main-surface-primary, #fff);
-			--palette-text: var(--text-primary, #0d0d0d);
-			--palette-muted: var(--text-secondary, #5d5d5d);
-			--palette-hover: var(--surface-hover, rgba(0, 0, 0, .05));
-			--palette-border: var(--border-light, rgba(0, 0, 0, .11));
+			--palette-surface: var(--color-surface-elevated-secondary, var(--main-surface-primary, #fff));
+			--palette-text: var(--color-text, var(--text-primary, #0d0d0d));
+			--palette-muted: var(--color-text-secondary, var(--text-secondary, #5d5d5d));
+			--palette-hover: var(--color-background-primary-ghost-hover, var(--surface-hover, rgba(0, 0, 0, .05)));
+			--palette-border: var(--color-border, var(--border-light, rgba(0, 0, 0, .11)));
 			--palette-swatch-border: rgba(0, 0, 0, .16);
 			position: fixed;
 			z-index: 2147483647;
@@ -222,11 +222,11 @@ function ensureStyles() {
 			animation: highlights-palette-in 100ms cubic-bezier(.2, .8, .2, 1);
 		}
 		#${PALETTE_ID}[data-theme='dark'] {
-			--palette-surface: var(--main-surface-primary, #212121);
-			--palette-text: var(--text-primary, #f2f2f2);
-			--palette-muted: var(--text-secondary, #b4b4b4);
-			--palette-hover: var(--surface-hover, rgba(255, 255, 255, .08));
-			--palette-border: var(--border-light, rgba(255, 255, 255, .12));
+			--palette-surface: var(--color-surface-elevated-secondary, var(--main-surface-primary, #212121));
+			--palette-text: var(--color-text, var(--text-primary, #f2f2f2));
+			--palette-muted: var(--color-text-secondary, var(--text-secondary, #b4b4b4));
+			--palette-hover: var(--color-background-primary-ghost-hover, var(--surface-hover, rgba(255, 255, 255, .08)));
+			--palette-border: var(--color-border, var(--border-light, rgba(255, 255, 255, .12)));
 			--palette-swatch-border: rgba(255, 255, 255, .18);
 			box-shadow: 0 4px 14px rgba(0, 0, 0, .30), 0 1px 2px rgba(0, 0, 0, .20);
 		}

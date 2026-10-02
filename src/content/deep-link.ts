@@ -1,4 +1,5 @@
 import type { HighlightRecord } from "../shared/types";
+import { MESSAGE_SELECTOR } from "./chatgpt-dom";
 import {
 	getRenderedHighlightRect,
 	reanchorHighlightForNavigation,
@@ -94,7 +95,7 @@ interface ConversationScroller {
 }
 
 function findConversationScroller(): ConversationScroller | null {
-	const message = document.querySelector("[data-message-author-role]");
+	const message = document.querySelector(MESSAGE_SELECTOR);
 	if (!message) return null;
 	const candidates = Array.from(document.querySelectorAll<HTMLElement>("*"))
 		.filter((element) => {
@@ -188,7 +189,7 @@ function revealInScroller(
 }
 
 function waitForConversationReady(timeoutMs = 15_000) {
-	if (document.querySelector("[data-message-author-role]")) {
+	if (document.querySelector(MESSAGE_SELECTOR)) {
 		return Promise.resolve(true);
 	}
 	return new Promise<boolean>((resolve) => {
@@ -201,7 +202,7 @@ function waitForConversationReady(timeoutMs = 15_000) {
 			resolve(ready);
 		};
 		const observer = new MutationObserver(() => {
-			if (document.querySelector("[data-message-author-role]")) finish(true);
+			if (document.querySelector(MESSAGE_SELECTOR)) finish(true);
 		});
 		observer.observe(document.body, { childList: true, subtree: true });
 		const timeout = window.setTimeout(() => finish(false), timeoutMs);
@@ -236,8 +237,9 @@ function showLoadingStatus() {
 		border: "1px solid var(--border-light, rgba(0, 0, 0, .08))",
 		borderRadius: "999px",
 		padding: "8px 13px",
-		color: "var(--text-primary, #0d0d0d)",
-		background: "var(--main-surface-primary, #fff)",
+		color: "var(--color-text, var(--text-primary, #0d0d0d))",
+		background:
+			"var(--color-surface-elevated-secondary, var(--main-surface-primary, #fff))",
 		boxShadow: "0 5px 18px rgba(0, 0, 0, .1)",
 		fontFamily: "inherit",
 		fontSize: "13px",

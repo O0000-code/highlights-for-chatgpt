@@ -1,4 +1,5 @@
 import { type CapturedAnchor, captureSelectionAnchor } from "./anchors";
+import { getMessageElement } from "./chatgpt-dom";
 
 const UI_ATTRIBUTE = "data-highlights-ui";
 const STYLE_ID = "highlights-selection-toolbar-style";
@@ -64,11 +65,7 @@ function handleSelectionEvent(event: Event) {
 	}
 
 	const range = selection.getRangeAt(0);
-	const containingElement =
-		range.commonAncestorContainer instanceof Element
-			? range.commonAncestorContainer
-			: range.commonAncestorContainer.parentElement;
-	if (!containingElement?.closest("article, [data-message-author-role]")) {
+	if (!getMessageElement(range.commonAncestorContainer)) {
 		dismissSelectionToolbar();
 		return;
 	}
@@ -344,7 +341,8 @@ function isEditingText() {
 	return (
 		active instanceof HTMLInputElement ||
 		active instanceof HTMLTextAreaElement ||
-		active?.getAttribute("contenteditable") === "true"
+		active?.getAttribute("contenteditable") === "true" ||
+		active?.getAttribute("contenteditable") === "plaintext-only"
 	);
 }
 
@@ -401,6 +399,7 @@ function ensureStyles() {
 		}
 		#${FALLBACK_ID}:hover { background: var(--surface-hover, rgba(0, 0, 0, .05)); }
 		#${FALLBACK_ID}:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+		#${FALLBACK_ID} { background: var(--color-surface-elevated-secondary, var(--main-surface-primary, #fff)); color: var(--color-text, var(--text-primary, #0d0d0d)); }
 	`;
 	(document.head ?? document.documentElement).appendChild(style);
 }

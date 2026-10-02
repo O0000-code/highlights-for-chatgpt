@@ -1,3 +1,5 @@
+import { getMessageElement } from "./chatgpt-dom";
+
 export interface CapturedAnchor {
 	text: string;
 	prefix: string;
@@ -41,6 +43,10 @@ const EXCLUDED_TEXT_SELECTOR = [
 	"textarea",
 	"input",
 	"[contenteditable='true']",
+	"[contenteditable='plaintext-only']",
+	"[hidden]",
+	"[aria-hidden='true']",
+	"[inert]",
 ].join(",");
 
 export function captureSelectionAnchor(
@@ -127,11 +133,7 @@ export function normalizeRangeText(value: string) {
 }
 
 function getSelectionScope(range: Range) {
-	const element =
-		range.commonAncestorContainer instanceof Element
-			? range.commonAncestorContainer
-			: range.commonAncestorContainer.parentElement;
-	return element?.closest<HTMLElement>("[data-message-author-role], article");
+	return getMessageElement(range.commonAncestorContainer);
 }
 
 function buildTextIndex(root: Node, collapseWhitespace: boolean): TextIndex {

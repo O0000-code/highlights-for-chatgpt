@@ -1,4 +1,5 @@
 import { HIGHLIGHT_COLOR_TOKENS } from "../shared/colors";
+import { getPromptElements } from "./chatgpt-dom";
 import {
 	getNavigationHighlights,
 	HIGHLIGHTS_CHANGED_EVENT,
@@ -567,12 +568,6 @@ function renderFallbackNavigator() {
 	menuList.replaceChildren(menuItems);
 }
 
-function getPromptElements() {
-	return Array.from(
-		document.querySelectorAll<HTMLElement>("[data-message-author-role='user']"),
-	);
-}
-
 function getFixedAncestor(element: HTMLElement) {
 	let current = element.parentElement;
 	while (current && current !== document.body) {
@@ -760,7 +755,7 @@ function ensureStyles() {
 			max-width: calc(100vw - 32px);
 			padding: 6px 0;
 			border-radius: 16px;
-			background: var(--main-surface-primary, #fff);
+			background: var(--color-surface-elevated-secondary, var(--main-surface-primary, #fff));
 			box-shadow: 0 8px 12px rgba(0, 0, 0, .08), 0 0 1px rgba(0, 0, 0, .62);
 			transform: translateY(-50%);
 			animation: highlights-native-menu-in 160ms cubic-bezier(.33, 1, .68, 1);
@@ -785,7 +780,7 @@ function ensureStyles() {
 			border: 0;
 			border-radius: 10px !important;
 			background: transparent;
-			color: var(--text-primary, #0d0d0d);
+			color: var(--color-text, var(--text-primary, #0d0d0d));
 			font: inherit;
 			font-size: 14px;
 			line-height: 20px;

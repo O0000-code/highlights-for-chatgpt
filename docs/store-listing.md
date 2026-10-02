@@ -24,7 +24,7 @@ Your highlight returns automatically whenever you reopen that conversation. A
 compact edge rail shows one real marker for every saved passage; hover to preview
 and click to jump.
 
-Open **Highlights** in ChatGPT's Library to browse everything you have marked,
+Open **Highlights** in ChatGPT's Space (or the classic Library) to browse everything you have marked,
 search or filter by color, preview a passage, and return to its exact source.
 Export all, filtered, or selected highlights as Markdown or plain text, or keep
 a JSON backup that can be restored later.
@@ -35,7 +35,7 @@ You can:
 - switch between four restrained colors;
 - remove a highlight from the same compact toolbar;
 - jump between saved passages without a sidebar or popup;
-- browse, search, filter, and preview highlights in ChatGPT's Library;
+- browse, search, filter, and preview highlights in ChatGPT's Space or Library;
 - export selected highlights as Markdown or plain text; and
 - create and restore a portable JSON backup.
 

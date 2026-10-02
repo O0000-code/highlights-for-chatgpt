@@ -18,7 +18,7 @@ exact jump-back, a Library, and local export.
 <br/>
 
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-000?style=flat-square" alt="MIT license"/></a>
-<img src="https://img.shields.io/badge/version-0.3.9-000?style=flat-square" alt="v0.3.9"/>
+<img src="https://img.shields.io/badge/version-0.3.10-000?style=flat-square" alt="v0.3.10"/>
 <img src="https://img.shields.io/badge/privacy-local_only-000?style=flat-square" alt="Local only"/>
 <img src="https://img.shields.io/badge/browser-Chromium-000?style=flat-square" alt="Chromium"/>
 
@@ -34,7 +34,7 @@ conversation is reopened.
 
 - Four restrained colors, with recolor and remove in the same compact menu.
 - One edge marker per saved passage; hover to preview, click to return.
-- A **Highlights** view inside ChatGPT's Library for search, filtering, preview,
+- A **Highlights** view inside ChatGPT's Space (or the classic Library) for search, filtering, preview,
   source navigation, and selected export.
 - Markdown, plain-text, and JSON backup export from local storage.
 - Optional, allow-listed integration with a compatible ChatGPT Markdown
@@ -101,7 +101,9 @@ Read the full [privacy policy](PRIVACY.md) and [support guidance](SUPPORT.md).
 
 ## Install
 
-The Chrome Web Store listing is under review. Until it is approved, install from source:
+Install the approved version from the [Chrome Web Store](https://chromewebstore.google.com/detail/highlights-for-chatgpt/ickelkpfjfeancinmfbldmfimokjjjmg).
+Version 0.3.10 adapts to the refreshed ChatGPT conversation and Space interfaces.
+To install the current source version:
 
 ```bash
 git clone https://github.com/O0000-code/highlights-for-chatgpt.git

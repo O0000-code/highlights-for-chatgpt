@@ -106,6 +106,64 @@ function createHighlightRoot(anchor: HTMLElement, view: "list" | "grid") {
 }
 
 describe("Native Library component reuse", () => {
+	test("adapts Space role-checkbox components without copying native file data", () => {
+		fixture = installDom(
+			`<main><div role="grid" class="space-native-group"><div role="row" aria-selected="false" class="space-native-row"><span class="relative flex items-center"><button role="checkbox" class="space-native-checkbox icon-2xs rounded-xs" aria-checked="true" data-state="checked"><svg viewBox="0 0 17 17"><path d="M3 9l4 4 6-9" /></svg></button></span>Private native file</div></div></main>`,
+		);
+		const anchor = requireElement<HTMLElement>("main");
+		const before = anchor.firstElementChild?.outerHTML;
+		const components = captureNativeLibraryComponents(anchor);
+		const root = createHighlightRoot(anchor, "list");
+		applyNativeLibraryComponents(root, "list", components);
+		const input = root.querySelector<HTMLInputElement>(
+			"[data-select-highlight='own-record']",
+		);
+		expect(root.dataset.highlightsSpaceLibrary).toBe("true");
+		expect(
+			root
+				.querySelector(".highlights-library-record-row")
+				?.classList.contains("space-native-row"),
+		).toBe(true);
+		expect(input?.classList.contains("space-native-checkbox")).toBe(true);
+		expect(input?.checked).toBe(true);
+		expect(input?.dataset.state).toBe("checked");
+		expect(input?.parentElement?.querySelector("svg")?.style.visibility).toBe(
+			"visible",
+		);
+		expect(
+			root.querySelector<HTMLInputElement>("[data-select-thread]")?.dataset
+				.state,
+		).toBe("indeterminate");
+		expect(root.textContent).not.toContain("Private native file");
+		expect(anchor.firstElementChild?.outerHTML).toBe(before);
+	});
+
+	test("keeps Space list and grid checkbox sizes separate on a cold grid route", () => {
+		fixture = installDom(
+			`<main><div class="native-responsive-grid"><div data-masonry-item="synthetic"><div data-library-item><div class="native-tile overflow-hidden"><div class="absolute end-4.5 bottom-4.5"><span class="relative flex items-center"><button role="checkbox" class="native-grid-check size-5 rounded-full" data-state="unchecked"></button></span></div></div></div></div></div></main>`,
+		);
+		const anchor = requireElement<HTMLElement>("main");
+		const components = captureNativeLibraryComponents(anchor);
+		const root = createHighlightRoot(anchor, "grid");
+		applyNativeLibraryComponents(root, "grid", components);
+		expect(root.dataset.highlightsSpaceLibrary).toBe("true");
+		expect(root.dataset.highlightsNativeGrid).toBe("true");
+		expect(
+			root
+				.querySelector(".highlights-library-grid")
+				?.classList.contains("native-responsive-grid"),
+		).toBe(true);
+		expect(
+			root.querySelector<HTMLInputElement>("[data-select-thread]")?.style.width,
+		).toBe("20px");
+		expect(
+			root.querySelector<HTMLInputElement>("[data-select-all]")?.style.width,
+		).toBe("16px");
+		expect(
+			root.querySelector<HTMLInputElement>("[data-select-all]")?.style
+				.borderRadius,
+		).toBe("2px");
+	});
 	for (const prefix of ["liveAlpha91", "liveBeta27"]) {
 		test(`uses the runtime stylesheet classes from ${prefix}`, () => {
 			const anchor = installNativeFixture(prefix);

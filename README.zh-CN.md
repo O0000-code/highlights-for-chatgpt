@@ -17,7 +17,7 @@
 <br/>
 
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-000?style=flat-square" alt="MIT license"/></a>
-<img src="https://img.shields.io/badge/version-0.3.9-000?style=flat-square" alt="v0.3.9"/>
+<img src="https://img.shields.io/badge/version-0.3.10-000?style=flat-square" alt="v0.3.10"/>
 <img src="https://img.shields.io/badge/privacy-local_only-000?style=flat-square" alt="Local only"/>
 <img src="https://img.shields.io/badge/browser-Chromium-000?style=flat-square" alt="Chromium"/>
 
@@ -93,7 +93,8 @@ ChatGPT 当前加载的组件尺寸与主题变量，并为宿主变化保留隔
 
 ## 安装
 
-Chrome 应用商店页面正在审核中。审核通过前，可从源码安装：
+已上架 [Chrome 应用商店](https://chromewebstore.google.com/detail/highlights-for-chatgpt/ickelkpfjfeancinmfbldmfimokjjjmg)。
+0.3.10 适配新版 ChatGPT 对话和 Space 界面。需要使用当前源码版本时，可按以下步骤安装：
 
 ```bash
 git clone https://github.com/O0000-code/highlights-for-chatgpt.git

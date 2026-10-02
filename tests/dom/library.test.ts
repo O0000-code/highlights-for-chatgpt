@@ -60,6 +60,38 @@ function currentLibraryMarkup(
 }
 
 describe("Highlights Library", () => {
+	test("extends the Space tab wrappers, preserves its route, and restores native content on exit", async () => {
+		const dom = installDom(
+			`<nav><h1>Space</h1></nav><main><header><h1>All</h1><input type="search" placeholder="Search"><button>New</button></header><div><div role="tablist" aria-label="Library sections"><div class="native-tab-wrapper"><button role="tab" aria-selected="true" class="native-active">Suggested</button></div><div class="native-tab-wrapper"><button role="tab" class="native-inactive">Favorites</button></div><div class="native-tab-wrapper"><button role="tab" class="native-inactive">Your items</button></div><div class="native-tab-wrapper"><button role="tab" class="native-inactive">Shared with you</button></div></div><button aria-label="Grid view"></button><button aria-label="List view"></button></div><div class="native-body"><div role="grid"><div role="row" aria-selected="false">Native Space file</div></div></div></main>`,
+			"https://chatgpt.com/space",
+		);
+		const library = initHighlightLibrary({
+			loadRecords: async () => [record],
+			poll: false,
+		});
+		const tab = document.querySelector<HTMLElement>(
+			"[data-highlights-library-tab]",
+		);
+		expect(tab?.parentElement?.className).toBe("native-tab-wrapper");
+		expect(document.querySelector("[role='tablist']")?.children).toHaveLength(
+			5,
+		);
+		tab?.click();
+		await Promise.resolve();
+		expect(window.location.pathname).toBe("/space");
+		expect(window.location.search).toBe("?view=highlights");
+		expect(document.querySelector("[data-highlight-record-id]")).not.toBeNull();
+		document.querySelector<HTMLElement>("[role='tab']")?.click();
+		library.reconcile();
+		expect(window.location.search).toBe("");
+		expect(
+			document
+				.querySelector(".native-body")
+				?.hasAttribute("data-highlights-library-native-hidden"),
+		).toBe(false);
+		library.observer.disconnect();
+		await dom.window.happyDOM.abort();
+	});
 	for (const selected of [
 		"Suggested",
 		"Favorites",
