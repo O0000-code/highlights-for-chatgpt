@@ -104,7 +104,8 @@ Read the full [privacy policy](PRIVACY.md) and [support guidance](SUPPORT.md).
 Install the approved version from the [Chrome Web Store](https://chromewebstore.google.com/detail/highlights-for-chatgpt/ickelkpfjfeancinmfbldmfimokjjjmg).
 Version 0.3.11 adapts to the refreshed ChatGPT conversation and Space interfaces,
 including native selection controls and list/grid state.
-The 0.3.11 store update is under review and will publish automatically after approval.
+The 0.3.11 store review has been withdrawn for further visual verification.
+The next store submission is on hold until that verification is complete.
 To install the current source version:
 
 ```bash

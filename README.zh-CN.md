@@ -95,7 +95,7 @@ ChatGPT 当前加载的组件尺寸与主题变量，并为宿主变化保留隔
 
 已上架 [Chrome 应用商店](https://chromewebstore.google.com/detail/highlights-for-chatgpt/ickelkpfjfeancinmfbldmfimokjjjmg)。
 0.3.11 适配新版 ChatGPT 对话和 Space 界面，并修正选择控件与列表／网格状态。需要使用当前源码版本时，可按以下步骤安装：
-商店版 0.3.11 更新正在审核中，通过后会自动发布。
+商店版 0.3.11 已撤回审核，正在补充视觉验证；确认完成前不会重新提审。
 
 ```bash
 git clone https://github.com/O0000-code/highlights-for-chatgpt.git
