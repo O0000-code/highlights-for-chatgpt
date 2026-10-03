@@ -17,7 +17,7 @@
 <br/>
 
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-000?style=flat-square" alt="MIT license"/></a>
-<img src="https://img.shields.io/badge/version-0.3.11-000?style=flat-square" alt="v0.3.11"/>
+<img src="https://img.shields.io/badge/version-0.3.12-000?style=flat-square" alt="v0.3.12"/>
 <img src="https://img.shields.io/badge/privacy-local_only-000?style=flat-square" alt="Local only"/>
 <img src="https://img.shields.io/badge/browser-Chromium-000?style=flat-square" alt="Chromium"/>
 
@@ -32,7 +32,7 @@ ChatGPT 的长对话很好读，却很难回头寻找某一句真正有用的内
 
 - 四种克制的颜色，可在同一个小弹框中换色或取消高亮。
 - 每个高亮对应一个页面边缘标记；悬停预览，点击返回原文。
-- 在 ChatGPT Library 中加入 **Highlights**，支持搜索、颜色筛选、预览、
+- 在 ChatGPT 的 Space（或旧版 Library）中加入 **Highlights**，支持搜索、颜色筛选、预览、
   返回来源和按选择导出。
 - 从本地存储导出 Markdown、纯文本或可恢复的 JSON 备份。
 - 可选地与指定的 ChatGPT Markdown 导出插件联动，在当前对话导出时保留
@@ -94,8 +94,8 @@ ChatGPT 当前加载的组件尺寸与主题变量，并为宿主变化保留隔
 ## 安装
 
 已上架 [Chrome 应用商店](https://chromewebstore.google.com/detail/highlights-for-chatgpt/ickelkpfjfeancinmfbldmfimokjjjmg)。
-0.3.11 适配新版 ChatGPT 对话和 Space 界面，并修正选择控件与列表／网格状态。需要使用当前源码版本时，可按以下步骤安装：
-商店版 0.3.11 已撤回审核，正在补充视觉验证；确认完成前不会重新提审。
+当前源码版本为 0.3.12，适配新版 ChatGPT 与 Space，并修正原生复选框、选择布局和文字工具栏分隔线。
+商店链接提供最新已审核版本。需要使用当前源码版本时，可按以下步骤安装：
 
 ```bash
 git clone https://github.com/O0000-code/highlights-for-chatgpt.git

@@ -89,3 +89,45 @@
 - [x] Confirm single-purpose and site-access rationales.
 - [x] Confirm the listing says the extension is independent and not affiliated with OpenAI.
 - [x] Submit version 0.3.9 for review with automatic publication after approval.
+
+## Refreshed ChatGPT update — 0.3.10
+
+- [x] Restore the native Highlight action on refreshed messages and plain user prompts.
+- [x] Restore Highlights in Space while retaining classic Library compatibility.
+- [x] Verify native list/grid geometry, selection, search, Back/Escape, and selected export.
+- [x] Verify save, cold refresh, four colors, jump-back and removal in signed-in Dia.
+- [x] Verify 86 tests, formatting, typecheck, build, ZIP integrity and public-source privacy.
+- [x] Publish the source fix and reproduce the packaged build from the public checkout.
+- [x] Complete the publisher's Google reauthentication.
+- [x] Upload version 0.3.10 to the existing store item.
+- [x] Supersede the 0.3.10 draft before submission; use 0.3.11.
+
+Version 0.3.10 was not submitted: follow-up selection-state regressions were
+fixed before review, and its draft package was replaced with 0.3.11.
+
+## Selection-state follow-up — 0.3.11
+
+- [x] Keep cold-grid fallback styles separate from list checkboxes.
+- [x] Isolate Space rows from cached classic Library surfaces.
+- [x] Keep the summary and partially selected conversation neutral.
+- [x] Synchronize native view-control classes and selection flags with content.
+- [x] Verify 91 tests, formatting, typecheck, build and ZIP integrity.
+- [x] Verify the reported partial-selection and view-switch states in signed-in Dia.
+- [x] Upload version 0.3.11 to the existing store item.
+- [x] Replace the policy link with its directly accessible public content URL.
+- [x] Withdraw the 0.3.11 review after further reported visual regressions.
+- [x] Obtain the user's visual confirmation before another store submission.
+
+## Native state matrix candidate — 0.3.12
+
+- [x] Replace simulated Space inputs with controlled native checkbox buttons.
+- [x] Preserve state and focus as native checkbox templates arrive late.
+- [x] Separate statistics, checkbox gutter, and selection actions without overlap.
+- [x] Keep metadata neutral and merge only adjacent selected passages.
+- [x] Match the Space content-container date threshold and action-column widths.
+- [x] Verify an actual visible separator in the native text-selection toolbar.
+- [x] Pass 94 tests, formatter, typecheck, build, package integrity, and deployment comparison.
+- [x] Install into the existing unpacked identity and verify wide and compact desktop states in Dia.
+- [x] Obtain the user's confirmation of the locally installed candidate on 2026-10-03.
+- [ ] Publish the final approved source and upload its matching package.
+- [ ] Submit the approved update to the existing store item.

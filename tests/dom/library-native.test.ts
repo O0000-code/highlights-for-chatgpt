@@ -127,9 +127,9 @@ describe("Native Library component reuse", () => {
 		expect(input?.classList.contains("space-native-checkbox")).toBe(true);
 		expect(input?.checked).toBe(true);
 		expect(input?.dataset.state).toBe("checked");
-		expect(input?.parentElement?.querySelector("svg")?.style.visibility).toBe(
-			"visible",
-		);
+		expect(input?.tagName).toBe("BUTTON");
+		expect(input?.getAttribute("role")).toBe("checkbox");
+		expect(input?.querySelector("svg")).not.toBeNull();
 		expect(
 			root.querySelector<HTMLInputElement>("[data-select-thread]")?.dataset
 				.state,

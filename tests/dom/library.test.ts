@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { initHighlightLibrary } from "../../src/content/library";
+import type { LibraryCheckbox } from "../../src/content/library-checkbox";
 import {
 	DATA_SCHEMA_VERSION,
 	type HighlightRecord,
@@ -60,6 +61,124 @@ function currentLibraryMarkup(
 }
 
 describe("Highlights Library", () => {
+	test("uses the Space content container for compact dates without disabling row selection", async () => {
+		const dom = installDom(
+			currentLibraryMarkup(
+				"<div role='grid'><div role='row' aria-selected='false'>Native file</div></div>",
+			),
+			"https://chatgpt.com/space?view=highlights",
+		);
+		dom.window.happyDOM.setWindowSize({ width: 820, height: 900 });
+		const library = initHighlightLibrary({
+			loadRecords: async () => [record],
+			poll: false,
+		});
+		library.observer.disconnect();
+		await Promise.resolve();
+		const groups = document.querySelector<HTMLElement>(
+			".highlights-library-groups",
+		) as HTMLElement;
+		expect(getComputedStyle(groups).containerName).toBe("library-row");
+		expect(getComputedStyle(groups).containerType).toBe("inline-size");
+		for (const date of groups.querySelectorAll<HTMLElement>(
+			".highlights-library-date, .highlights-library-compact-date",
+		))
+			expect(getComputedStyle(date).display).toBe("none");
+		const dock = groups.querySelector<HTMLElement>(
+			".highlights-library-check",
+		) as HTMLElement;
+		expect(getComputedStyle(dock).display).toBe("flex");
+		groups.querySelector<LibraryCheckbox>("[data-select-highlight]")?.click();
+		expect(
+			document
+				.querySelector("[data-select-highlight]")
+				?.getAttribute("aria-checked"),
+		).toBe("true");
+		expect(document.querySelector(".highlights-library-detail")).toBeNull();
+		expect(
+			document.getElementById("highlights-library-styles")?.textContent,
+		).toContain("@container library-row (min-width: 32rem)");
+		await dom.window.happyDOM.abort();
+	});
+
+	test("upgrades cold Space checkboxes in place and toggles each dock exactly once", async () => {
+		const dom = installDom(
+			currentLibraryMarkup(""),
+			"https://chatgpt.com/space?view=highlights",
+		);
+		const library = initHighlightLibrary({
+			loadRecords: async () => [record, sameConversation, anotherConversation],
+			poll: false,
+		});
+		library.observer.disconnect();
+		await Promise.resolve();
+		await Promise.resolve();
+		const root = document.getElementById(
+			"highlights-library-root",
+		) as HTMLElement;
+		const checkbox = (selector: string) =>
+			root.querySelector<LibraryCheckbox>(selector) as LibraryCheckbox;
+		const firstSelector = `[data-select-highlight='${record.id}']`;
+		const first = checkbox(firstSelector);
+		expect(first.tagName).toBe("BUTTON");
+		expect(first.dataset.highlightsFallbackCheckbox).toBe("");
+		let changes = 0;
+		root.addEventListener("change", () => changes++, true);
+		first.closest("label")?.click();
+		expect(changes).toBe(1);
+		expect(checkbox(firstSelector).checked).toBe(true);
+		expect(checkbox("[data-select-thread]").indeterminate).toBe(true);
+		const focused = checkbox(firstSelector);
+		focused.focus();
+		expect(document.activeElement === focused).toBe(true);
+		const nativeBody = document.querySelector(".native-body") as HTMLElement;
+		nativeBody.innerHTML = `<div role="grid"><div role="row" aria-selected="false" class="late-native-row"><span class="relative flex items-center opacity-0 group-hover:opacity-100"><button type="button" role="checkbox" class="late-native-checkbox icon-2xs rounded-xs" data-size="xs" aria-label="Private native filename" id="private-native-id" data-state="checked"><span><svg viewBox="0 0 17 17"><path d="M3 9l4 4 6-9" /></svg></span></button></span></div></div>`;
+		const nativeRow = nativeBody.querySelector("[role='row']") as HTMLElement;
+		const before = nativeRow.outerHTML;
+		expect(document.activeElement === focused).toBe(true);
+		library.reconcile();
+		expect(checkbox(firstSelector)).toBe(focused);
+		expect(document.activeElement === focused).toBe(true);
+		expect(focused.classList.contains("late-native-checkbox")).toBe(true);
+		expect(focused.hasAttribute("data-highlights-fallback-checkbox")).toBe(
+			false,
+		);
+		expect(focused.dataset.size).toBe("xs");
+		expect(focused.style.width).toBe("16px");
+		expect(focused.style.borderRadius).toBe("2px");
+		expect(focused.id).toBe("");
+		expect(focused.getAttribute("aria-label")).not.toContain("Private native");
+		expect(focused.checked).toBe(true);
+		expect(focused.querySelector("svg path")?.getAttribute("d")).toBe(
+			"M3 9l4 4 6-9",
+		);
+		expect(nativeRow.outerHTML).toBe(before);
+		checkbox(firstSelector)
+			.closest("label")
+			?.querySelector<HTMLElement>("[data-highlights-checkbox-bridge]")
+			?.click();
+		expect(changes).toBe(2);
+		expect(checkbox(firstSelector).checked).toBe(false);
+		checkbox("[data-select-all]").closest("label")?.click();
+		expect(changes).toBe(3);
+		expect(checkbox("[data-select-all]").checked).toBe(true);
+		expect(root.querySelector(".highlights-library-detail")).toBeNull();
+		const rows = Array.from(
+			root.querySelectorAll<HTMLElement>(".highlights-library-record-row"),
+		);
+		expect(rows[0]?.dataset.highlightsMergeNext).toBe("true");
+		expect(rows[1]?.dataset.highlightsMergePrevious).toBe("true");
+		expect(rows[1]?.dataset.highlightsMergeNext).toBe("false");
+		expect(rows[2]?.dataset.highlightsMergePrevious).toBe("false");
+		checkbox("[data-select-all]").click();
+		expect(changes).toBe(4);
+		expect(
+			root.querySelectorAll("[role='checkbox'][aria-checked='true']"),
+		).toHaveLength(0);
+		expect(root.querySelector(".highlights-library-detail")).toBeNull();
+		await dom.window.happyDOM.abort();
+	});
+
 	test("synchronizes native selected/suppress flags as well as aria state, without replacing the controls", async () => {
 		const dom = installDom(
 			currentLibraryMarkup(),
@@ -187,7 +306,7 @@ describe("Highlights Library", () => {
 			".highlights-library-group > header",
 		) as HTMLElement;
 		expect(fullHeader.dataset.selectionState).toBe("all");
-		expect(getComputedStyle(fullHeader).backgroundColor).toBe(
+		expect(getComputedStyle(fullHeader).backgroundColor).not.toBe(
 			"rgb(230, 230, 230)",
 		);
 		expect(

@@ -11,6 +11,11 @@ import {
 } from "../shared/export";
 import type { HighlightRecord } from "../shared/types";
 import {
+	isLibraryCheckbox,
+	LIBRARY_CHECKBOX_SELECTOR,
+	type LibraryCheckbox,
+} from "./library-checkbox";
+import {
 	applyNativeLibraryComponents,
 	captureNativeLibraryComponents,
 	type NativeLibraryComponents,
@@ -457,7 +462,24 @@ function ensureRoot(
 	parts.anchor.append(root);
 	root.addEventListener("click", (event) => {
 		const target = event.target as Element;
-		if (target.closest(".highlights-library-check")) {
+		const checkboxDock = target.closest(".highlights-library-check");
+		if (checkboxDock) {
+			const directButton = target.closest<LibraryCheckbox>(
+				"button[data-highlights-native-checkbox]",
+			);
+			const button =
+				directButton ??
+				checkboxDock.querySelector<LibraryCheckbox>(
+					"button[data-highlights-native-checkbox]",
+				);
+			if (button && !button.disabled) {
+				event.preventDefault();
+				if (directButton) {
+					button.indeterminate = false;
+					button.checked = !button.checked;
+					button.dispatchEvent(new Event("change", { bubbles: true }));
+				} else button.click();
+			}
 			event.stopPropagation();
 			return;
 		}
@@ -484,8 +506,7 @@ function ensureRoot(
 	});
 	root.addEventListener("change", (event) => {
 		const input = event.target;
-		if (!(input instanceof HTMLInputElement) || input.type !== "checkbox")
-			return;
+		if (!isLibraryCheckbox(input)) return;
 		if (input.dataset.selectAll !== undefined) {
 			for (const record of getFilteredRecords(state)) {
 				if (input.checked) state.selectedIds.add(record.id);
@@ -511,7 +532,7 @@ function ensureRoot(
 		onStateChange();
 		if (focused && key) {
 			Array.from(
-				root.querySelectorAll<HTMLInputElement>("input[type='checkbox']"),
+				root.querySelectorAll<LibraryCheckbox>(LIBRARY_CHECKBOX_SELECTOR),
 			)
 				.find((candidate) => candidate.dataset[key] === value)
 				?.focus({ preventScroll: true });
@@ -601,7 +622,14 @@ function mountInNativeContentSurface(
 	host.setAttribute(CONTENT_HOST_ATTRIBUTE, "true");
 	host.setAttribute(UI_ATTRIBUTE, "true");
 	if (!existing) nativeBody.before(host);
-	if (!host.contains(root)) host.append(root);
+	if (!host.contains(root)) {
+		// The native body can hydrate after our first render. Reparenting keeps
+		// the controls but drops browser focus; restore it without scrolling.
+		const focused = document.activeElement;
+		host.append(root);
+		if (focused instanceof HTMLElement && root.contains(focused))
+			focused.focus({ preventScroll: true });
+	}
 	for (const body of bodies) markNativeHidden(body);
 }
 
@@ -1857,8 +1885,10 @@ function ensureStyles() {
 		#${ROOT_ID}[data-highlights-space-library='true'] { --text-primary: var(--color-text); --text-secondary: var(--color-text-secondary); --text-tertiary: var(--color-text-secondary); --border-light: var(--color-border); --border-default: var(--color-border-strong); --bg-primary: var(--color-surface-elevated-secondary); color: var(--color-text); }
 		.highlights-library-popover { color: var(--color-text, var(--text-primary, #0d0d0d)); background: var(--color-surface-elevated-secondary, var(--bg-primary, #fff)); border-color: var(--color-border, var(--border-light, rgba(0,0,0,.05))); }
 		.highlights-library-popover > button:hover { background: var(--color-background-primary-ghost-hover, var(--interactive-bg-tertiary-hover, #f9f9f9)); }
-		[data-highlights-space-library='true'] .highlights-library-groups { margin-inline: calc(-1 * var(--padding-row-cell-x, var(--padding-row-x, 8px))); }
-		[data-highlights-space-library='true'] .highlights-library-selection-summary { font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+		[data-highlights-space-library='true'] .highlights-library-groups { margin-inline: calc(-1 * var(--padding-row-cell-x, var(--padding-row-x, 8px))); container-name: library-row; container-type: inline-size; }
+		[data-highlights-space-library='true'] .highlights-library-selection-summary { position: relative; display: flex; align-items: center; height: 42px; box-sizing: border-box; gap: 16px; margin-inline: -8px; padding: 0 8px; font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+		[data-highlights-space-library='true'] .highlights-library-selection-summary > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		[data-highlights-space-library='true'] .highlights-library-selection-actions { flex: 0 0 auto; }
 		[data-highlights-space-library='true'] .highlights-library-native-check { opacity: 0; pointer-events: none; transition: opacity 150ms ease; }
 		[data-highlights-space-library='true'] .highlights-library-native-check[data-highlights-check-selected='true'],
 		[data-highlights-space-library='true'] .highlights-library-native-check:focus-within,
@@ -1868,14 +1898,28 @@ function ensureStyles() {
 		[data-highlights-space-library='true'] .highlights-library-selection-summary:is(:hover,:focus-within) > .highlights-library-check > .highlights-library-native-check,
 		[data-highlights-space-library='true'] .highlights-library-card:is(:hover,:focus-within) > .highlights-library-card-selection-layer > .highlights-library-check > .highlights-library-native-check { opacity: 1; pointer-events: auto; }
 		[data-highlights-space-library='true'] .highlights-library-check[data-highlights-check-kind='list'] { position: absolute; inset-block: 0; inset-inline-start: -24px; inset-inline-end: auto; width: 24px; display: flex; align-items: center; }
-		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header) { display: grid; grid-template-columns: minmax(0,1fr) 160px 64px; min-height: 50px; gap: 16px; padding: var(--padding-row-y, 5px) var(--padding-row-cell-x, var(--padding-row-x, 8px)); border-radius: 12px; color: var(--color-text); }
+		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header) { display: grid; grid-template-columns: minmax(0,1fr) 36px; min-height: 50px; gap: 16px; padding: var(--padding-row-y, 5px) var(--padding-row-cell-x, var(--padding-row-x, 8px)); border-radius: 12px; color: var(--color-text); }
+		[data-highlights-space-library='true'] :is(.highlights-library-date, .highlights-library-compact-date) { display: none; }
+		@container library-row (min-width: 32rem) {
+			[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header) { grid-template-columns: minmax(0,1fr) 160px 64px; }
+			[data-highlights-space-library='true'] .highlights-library-date { display: block; }
+		}
 		[data-highlights-space-library='true'] :is(.highlights-library-record-row, .highlights-library-group > header)::before { content: none; }
 		[data-highlights-space-library='true'] .highlights-library-record-row:hover,
-		[data-highlights-space-library='true'] .highlights-library-group > header:hover,
-		[data-highlights-space-library='true'] .highlights-library-record-row[data-selected='true'],
-		[data-highlights-space-library='true'] .highlights-library-group > header[data-selected='true'] { background: var(--color-background-primary-ghost-hover); }
+		[data-highlights-space-library='true'] .highlights-library-record-row[data-selected='true'] { background: var(--color-background-primary-ghost-hover); }
 		[data-highlights-space-library='true'] .highlights-library-native-check[data-highlights-check-kind='list'] input { width: 16px; height: 16px; border-radius: 2px; border-color: var(--color-border-strong); }
-		[data-highlights-space-library='true'] .highlights-library-native-check span { color: var(--color-text); background: var(--color-text); }
+		[data-highlights-space-library='true'] .highlights-library-native-check { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+		[data-highlights-space-library='true'] [data-highlights-fallback-checkbox] { border: 1px solid var(--color-border-strong, rgba(0,0,0,.15)); background: transparent; color: var(--color-text, #0d0d0d); }
+		[data-highlights-space-library='true'] [data-highlights-fallback-checkbox][data-state='checked'],
+		[data-highlights-space-library='true'] [data-highlights-fallback-checkbox][data-state='indeterminate'] { background: var(--color-background-primary-soft, #fff); }
+		[data-highlights-space-library='true'] [data-highlights-fallback-checkbox]:hover { background: var(--color-surface-tertiary, var(--color-background-primary-ghost-hover)); }
+		[data-highlights-space-library='true'] .highlights-library-group > header[data-selected] { background: transparent; border-bottom: 0; }
+		[data-highlights-space-library='true'] .highlights-library-record-row { border-bottom: 0; }
+		[data-highlights-space-library='true'] .highlights-library-record-row::after { content: ''; position: absolute; bottom: 0; inset-inline: 12px; height: 1px; pointer-events: none; background: var(--color-border, #0000000d); }
+		[data-highlights-space-library='true'] .highlights-library-record-row[data-selected='true']::after { display: none; }
+		[data-highlights-space-library='true'] .highlights-library-record-row[data-selected='true'] { background: var(--color-background-primary-soft-active, var(--color-background-primary-ghost-hover)); }
+		[data-highlights-space-library='true'] .highlights-library-record-row[data-highlights-merge-next='true'] { border-end-start-radius: 0; border-end-end-radius: 0; }
+		[data-highlights-space-library='true'] .highlights-library-record-row[data-highlights-merge-previous='true'] { border-start-start-radius: 0; border-start-end-radius: 0; }
 		[data-highlights-space-library='true'] .highlights-library-check [data-highlights-checkbox-bridge] { width: 8px; inset-inline-start: 16px; }
 		[data-highlights-space-library='true'] :is(.highlights-library-record-row > button, .highlights-library-card-records button) { color: var(--color-text); }
 		[data-highlights-space-library='true'] .highlights-library-date { color: var(--color-text-secondary); }

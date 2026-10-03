@@ -4,6 +4,12 @@
  * templates are the native September 2026 markup for cold/empty Library routes;
  * a live, matching component always takes precedence.
  */
+import {
+	createSpaceCheckbox,
+	LIBRARY_CHECKBOX_SELECTOR,
+	type LibraryCheckbox,
+	syncSpaceCheckbox,
+} from "./library-checkbox";
 export interface NativeLibraryComponents {
 	classes: Record<string, string>;
 	listCheckbox?: HTMLElement;
@@ -17,6 +23,9 @@ export interface NativeLibraryComponents {
 	spaceGridCheckboxClass?: string;
 	spaceGridClass?: string;
 	spaceGridTileClass?: string;
+	spaceListCheckboxButton?: HTMLButtonElement;
+	spaceGridCheckboxButton?: HTMLButtonElement;
+	spaceMixedIcon?: SVGElement;
 }
 
 const snapshots = new WeakMap<Document, NativeLibraryComponents>();
@@ -53,10 +62,6 @@ const SPACE_GRID =
 	"relative grid grid-cols-[repeat(var(--masonry-columns),minmax(0,1fr))] items-start gap-3 [--masonry-columns:1] sm:gap-4 @sm:[--masonry-columns:2] @xl:[--masonry-columns:3] @3xl:[--masonry-columns:4] @5xl:[--masonry-columns:5] @7xl:[--masonry-columns:6]";
 const SPACE_GRID_TILE =
 	"relative aspect-square w-full overflow-hidden rounded-2xl border bg-surface-elevated border-subtle shadow-card";
-const SPACE_LIST_INPUT =
-	"peer shrink-0 outline-none transition-[background-color,border-color,box-shadow] icon-2xs rounded-xs data-[state=checked]:bg-primary-soft data-[state=indeterminate]:bg-primary-soft border border-strong shadow-sm data-[state=checked]:text-default data-[state=indeterminate]:text-default focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 aria-invalid:ring-2 aria-invalid:ring-text-danger/20 aria-invalid:border-text-danger disabled:cursor-not-allowed hover:bg-surface-tertiary cursor-interaction";
-const SPACE_GRID_INPUT =
-	"peer shrink-0 outline-none transition-[background-color,border-color,box-shadow] size-5 rounded-full bg-surface disabled:bg-surface-secondary border border-strong shadow-sm data-[state=checked]:text-default data-[state=indeterminate]:text-default focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 aria-invalid:ring-2 aria-invalid:ring-text-danger/20 aria-invalid:border-text-danger disabled:cursor-not-allowed hover:bg-surface-tertiary cursor-interaction";
 const GRID_SELECTED =
 	"border-black ring-2 ring-black dark:border-white dark:ring-white";
 const GRID_INPUT_SELECTED =
@@ -72,7 +77,11 @@ export function captureNativeLibraryComponents(
 	snapshots.set(doc, components);
 	const spaceRow = Array.from(
 		anchor.querySelectorAll<HTMLElement>("[role='row'][aria-selected]"),
-	).find((row) => !row.closest("[data-highlights-ui]"));
+	).find(
+		(row) =>
+			!row.closest("[data-highlights-ui]") &&
+			row.getAttribute("aria-selected") === "false",
+	);
 	if (spaceRow) {
 		components.spaceRowClass = spaceRow.className;
 		components.spaceGroupClass =
@@ -83,14 +92,26 @@ export function captureNativeLibraryComponents(
 	)) {
 		if (button.closest("[data-highlights-ui]")) continue;
 		if (button.classList.contains("rounded-full")) {
+			components.spaceGridCheckboxButton = button.cloneNode(
+				true,
+			) as HTMLButtonElement;
 			components.spaceGridCheckboxClass = button.className;
 			components.gridDockClass = button.parentElement?.parentElement?.className;
 			components.spaceGridTileClass =
 				button.closest<HTMLElement>(".overflow-hidden")?.className;
-		} else components.spaceCheckboxClass = button.className;
+		} else {
+			components.spaceCheckboxClass = button.className;
+			components.spaceListCheckboxButton = button.cloneNode(
+				true,
+			) as HTMLButtonElement;
+		}
 		components.spaceCheckboxShellClass = button.parentElement?.className;
 		const icon = button.querySelector<SVGElement>("svg");
-		if (icon) components.checkIcon = icon.cloneNode(true) as SVGElement;
+		if (icon) {
+			if (button.getAttribute("data-state") === "indeterminate")
+				components.spaceMixedIcon = icon.cloneNode(true) as SVGElement;
+			else components.checkIcon = icon.cloneNode(true) as SVGElement;
+		}
 	}
 	const masonryItem = Array.from(
 		anchor.querySelectorAll<HTMLElement>("[data-masonry-item]"),
@@ -157,7 +178,9 @@ export function applyNativeLibraryComponents(
 	components: NativeLibraryComponents,
 ) {
 	const space = Boolean(
-		components.spaceRowClass ||
+		root.ownerDocument.defaultView?.location.pathname.replace(/\/$/, "") ===
+			"/space" ||
+			components.spaceRowClass ||
 			components.spaceCheckboxClass ||
 			components.spaceGridCheckboxClass,
 	);
@@ -213,6 +236,20 @@ export function applyNativeLibraryComponents(
 		const next = row.parentElement?.nextElementSibling?.querySelector(
 			".highlights-library-record-row",
 		);
+		if (space) {
+			const record = row.classList.contains("highlights-library-record-row");
+			row.dataset.highlightsMergePrevious = String(
+				record &&
+					row.dataset.selected === "true" &&
+					previous?.getAttribute("data-selected") === "true",
+			);
+			row.dataset.highlightsMergeNext = String(
+				record &&
+					row.dataset.selected === "true" &&
+					next?.getAttribute("data-selected") === "true",
+			);
+			if (!record) row.setAttribute("aria-selected", "false");
+		}
 		for (const [part, adjacent] of [
 			["rowSelectionGroupMergeWithPrevious", previous],
 			["rowSelectionGroupMergeWithNext", next],
@@ -254,24 +291,34 @@ export function applyNativeLibraryComponents(
 			addClasses(metadata, c.folderGridMetadata);
 	}
 	for (const input of Array.from(
-		root.querySelectorAll<HTMLInputElement>("input[type='checkbox']"),
+		root.querySelectorAll<LibraryCheckbox>(LIBRARY_CHECKBOX_SELECTOR),
 	)) {
 		const isGrid =
 			view === "grid" && Boolean(input.closest(".highlights-library-card"));
 		const alreadyApplied = input.closest<HTMLElement>(
 			".highlights-library-native-check",
 		);
-		if (alreadyApplied) continue;
+		if (
+			alreadyApplied &&
+			input.matches("button[data-highlights-native-checkbox]")
+		) {
+			syncSpaceCheckbox(input, components, isGrid);
+			continue;
+		}
+		if (alreadyApplied && !space) continue;
+		if (alreadyApplied) alreadyApplied.replaceWith(input);
 		const source = isGrid ? components.gridCheckbox : components.listCheckbox;
 		const shell = space
-			? createSpaceCheckboxTemplate(root.ownerDocument, components, isGrid)
+			? createSpaceCheckbox(root.ownerDocument, components, isGrid)
 			: ((source?.cloneNode(true) as HTMLElement | undefined) ??
 				createCheckboxTemplate(
 					root.ownerDocument,
 					isGrid,
 					components.checkIcon,
 				));
-		const control = shell.querySelector<HTMLInputElement>("input");
+		const control = shell.querySelector<LibraryCheckbox>(
+			LIBRARY_CHECKBOX_SELECTOR,
+		);
 		if (!control) continue;
 		const checked = input.checked;
 		const mixed = input.indeterminate;
@@ -280,7 +327,7 @@ export function applyNativeLibraryComponents(
 				if (
 					attribute.name === "id" ||
 					attribute.name === "name" ||
-					attribute.name.startsWith("data-") ||
+					(attribute.name.startsWith("data-") && !space) ||
 					attribute.name.startsWith("on") ||
 					attribute.name.startsWith("aria-labelledby") ||
 					attribute.name === "aria-describedby"
@@ -294,22 +341,15 @@ export function applyNativeLibraryComponents(
 		control.removeAttribute("checked");
 		control.removeAttribute("aria-label");
 		for (const attribute of Array.from(input.attributes)) {
-			if (attribute.name !== "class" && attribute.name !== "checked")
+			if (
+				attribute.name !== "class" &&
+				attribute.name !== "checked" &&
+				attribute.name !== "type"
+			)
 				control.setAttribute(attribute.name, attribute.value);
 		}
 		control.checked = checked;
 		control.indeterminate = mixed;
-		if (space) {
-			control.dataset.state = mixed
-				? "indeterminate"
-				: checked
-					? "checked"
-					: "unchecked";
-			control.setAttribute("aria-checked", mixed ? "mixed" : String(checked));
-			const glyph = shell.querySelector<SVGElement>("svg");
-			if (glyph)
-				glyph.style.visibility = checked && !mixed ? "visible" : "hidden";
-		}
 		addClasses(shell, "highlights-library-native-check");
 		shell.dataset.highlightsCheckKind = isGrid ? "grid" : "list";
 		shell.dataset.highlightsCheckSelected = String(checked || mixed);
@@ -350,7 +390,7 @@ export function applyNativeLibraryComponents(
 				checked || mixed ? "pointer-events-auto opacity-100" : REVEAL,
 			);
 		}
-		if (!shell.querySelector("span")) {
+		if (!space && !shell.querySelector("span")) {
 			const dash = root.ownerDocument.createElement("span");
 			dash.setAttribute("aria-hidden", "true");
 			dash.className = MIXED_ICON;
@@ -365,7 +405,7 @@ export function applyNativeLibraryComponents(
 			}
 			shell.append(dash);
 		}
-		if (isGrid)
+		if (isGrid && !space)
 			shell
 				.querySelector("span")
 				?.classList.add("highlights-library-grid-mixed");
@@ -383,9 +423,9 @@ export function applyNativeLibraryComponents(
 		}
 		input.replaceWith(shell);
 		if (!isGrid && dock?.classList.contains("highlights-library-check")) {
-			// This dock is a label, unlike the host's gridcell. A second labelable
-			// element would steal its control association. Let the label activate
-			// the checkbox once, while retaining the host's exact hover bridge.
+			// Keep the hover bridge non-labelable. Legacy inputs use the label's
+			// default activation; controlled Space buttons are routed explicitly
+			// by the root listener so a dock click toggles only once.
 			const bridge = root.ownerDocument.createElement("span");
 			bridge.dataset.highlightsCheckboxBridge = "true";
 			bridge.setAttribute("aria-hidden", "true");
@@ -394,41 +434,6 @@ export function applyNativeLibraryComponents(
 			dock.prepend(bridge);
 		}
 	}
-}
-
-function createSpaceCheckboxTemplate(
-	doc: Document,
-	components: NativeLibraryComponents,
-	grid: boolean,
-) {
-	const shell = doc.createElement("span");
-	shell.className =
-		components.spaceCheckboxShellClass ?? "relative flex items-center";
-	const input = doc.createElement("input");
-	input.type = "checkbox";
-	input.className = grid
-		? (components.spaceGridCheckboxClass ?? SPACE_GRID_INPUT)
-		: (components.spaceCheckboxClass ?? SPACE_LIST_INPUT);
-	input.style.appearance = "none";
-	input.style.margin = "0";
-	input.style.width = grid ? "20px" : "16px";
-	input.style.height = grid ? "20px" : "16px";
-	input.style.borderRadius = grid ? "9999px" : "2px";
-	const icon = components.checkIcon?.cloneNode(true) as SVGElement | undefined;
-	const fallback =
-		icon ?? createCheckboxTemplate(doc, false).querySelector<SVGElement>("svg");
-	if (fallback) {
-		fallback.setAttribute("aria-hidden", "true");
-		fallback.setAttribute("class", "pointer-events-none absolute text-current");
-		fallback.style.width = "17px";
-		fallback.style.height = "17px";
-		fallback.style.pointerEvents = "none";
-		fallback.style.left = "50%";
-		fallback.style.top = "50%";
-		fallback.style.transform = "translate(-50%, -50%)";
-		shell.append(input, fallback);
-	} else shell.append(input);
-	return shell;
 }
 
 function createCheckboxTemplate(

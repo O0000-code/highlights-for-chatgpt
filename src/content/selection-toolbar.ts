@@ -4,6 +4,7 @@ import { getMessageElement } from "./chatgpt-dom";
 const UI_ATTRIBUTE = "data-highlights-ui";
 const STYLE_ID = "highlights-selection-toolbar-style";
 const ACTION_ID = "highlights-native-action";
+const SEPARATOR_ID = "highlights-native-separator";
 const FALLBACK_ID = "highlights-selection-fallback";
 const NATIVE_ACTION_LABELS = [
 	"ask chatgpt",
@@ -26,6 +27,7 @@ type CaptureHandler = (capture: CapturedAnchor) => Promise<boolean>;
 
 let captureHandler: CaptureHandler | undefined;
 let nativeAction: HTMLButtonElement | null = null;
+let nativeSeparator: HTMLElement | null = null;
 let fallbackAction: HTMLButtonElement | null = null;
 let toolbarObserver: MutationObserver | null = null;
 let fallbackTimer: number | undefined;
@@ -43,8 +45,10 @@ export function initSelectionToolbar(handler: CaptureHandler) {
 
 export function dismissSelectionToolbar() {
 	nativeAction?.remove();
+	nativeSeparator?.remove();
 	fallbackAction?.remove();
 	nativeAction = null;
+	nativeSeparator = null;
 	fallbackAction = null;
 	latestCapture = null;
 	selectionRect = null;
@@ -79,8 +83,10 @@ function handleSelectionEvent(event: Event) {
 	latestCapture = capture;
 	selectionRect = getRangeRect(range);
 	nativeAction?.remove();
+	nativeSeparator?.remove();
 	fallbackAction?.remove();
 	nativeAction = null;
+	nativeSeparator = null;
 	fallbackAction = null;
 
 	if (!attachToNativeToolbar()) watchForNativeToolbar();
@@ -126,13 +132,22 @@ function attachToNativeToolbar() {
 	if (target.referenceButton.className) {
 		button.className = target.referenceButton.className;
 	}
+	for (const attribute of [
+		"data-color",
+		"data-variant",
+		"data-size",
+		"data-icon-size",
+		"data-pill",
+		"data-uniform",
+		"data-suppress-active-style",
+	]) {
+		const value = target.referenceButton.getAttribute(attribute);
+		if (value !== null) button.setAttribute(attribute, value);
+	}
 	Object.assign(button.style, {
 		alignSelf: "stretch",
 		alignItems: "center",
-		borderInlineStart: findNativeSeparator(
-			target.toolbar,
-			target.referenceChild,
-		),
+		borderInlineStartColor: "transparent",
 		display: "inline-flex",
 		justifyContent: "center",
 		whiteSpace: "nowrap",
@@ -140,11 +155,40 @@ function attachToNativeToolbar() {
 	const label = document.createElement("span");
 	label.dataset.highlightsUi = "true";
 	label.textContent = button.title;
-	button.appendChild(label);
+	const inner = target.referenceButton.firstElementChild;
+	if (
+		inner instanceof HTMLElement &&
+		normalizeLabel(inner.textContent ?? "") ===
+			normalizeLabel(target.referenceButton.textContent ?? "")
+	) {
+		const wrapper = document.createElement(inner.tagName);
+		wrapper.className = inner.className;
+		wrapper.dataset.highlightsUi = "true";
+		wrapper.append(label);
+		button.append(wrapper);
+	} else button.appendChild(label);
 	bindCaptureAction(button);
 
-	target.referenceChild.insertAdjacentElement("afterend", button);
+	const separator = document.createElement("span");
+	separator.id = SEPARATOR_ID;
+	separator.dataset.highlightsUi = "true";
+	separator.setAttribute("role", "separator");
+	separator.setAttribute("aria-orientation", "vertical");
+	separator.setAttribute("aria-hidden", "true");
+	Object.assign(separator.style, {
+		alignSelf: "stretch",
+		backgroundColor: findNativeSeparatorColor(
+			target.toolbar,
+			target.referenceChild,
+		),
+		flex: "0 0 1px",
+		width: "1px",
+		pointerEvents: "none",
+	});
+	target.referenceChild.insertAdjacentElement("afterend", separator);
+	separator.insertAdjacentElement("afterend", button);
 	nativeAction = button;
+	nativeSeparator = separator;
 	return true;
 }
 
@@ -190,6 +234,8 @@ function findNativeToolbarTarget(): NativeToolbarTarget | null {
 
 function findToolbarContainer(buttons: HTMLElement[]) {
 	let candidate = commonAncestor(buttons) ?? buttons[0]?.parentElement ?? null;
+	if (candidate?.matches("button, [role='button']"))
+		candidate = candidate.parentElement;
 	while (candidate && candidate !== document.body) {
 		const rect = candidate.getBoundingClientRect();
 		const controls = candidate.querySelectorAll(
@@ -227,7 +273,7 @@ function directChildOf(parent: HTMLElement, descendant: HTMLElement) {
 	return child?.parentElement === parent ? child : null;
 }
 
-function findNativeSeparator(
+function findNativeSeparatorColor(
 	toolbar: HTMLElement,
 	referenceChild: HTMLElement,
 ) {
@@ -236,9 +282,10 @@ function findNativeSeparator(
 	if (
 		borderWidth > 0 &&
 		borderWidth <= 1.5 &&
-		referenceStyle.borderInlineStartStyle === "solid"
+		referenceStyle.borderInlineStartStyle === "solid" &&
+		isVisibleColor(referenceStyle.borderInlineStartColor)
 	) {
-		return `${referenceStyle.borderInlineStartWidth} solid ${referenceStyle.borderInlineStartColor}`;
+		return referenceStyle.borderInlineStartColor;
 	}
 
 	const referenceIndex = Array.from(toolbar.children).indexOf(referenceChild);
@@ -252,10 +299,26 @@ function findNativeSeparator(
 			style.backgroundColor !== "rgba(0, 0, 0, 0)"
 				? style.backgroundColor
 				: style.borderInlineStartColor;
-		if (color) return `1px solid ${color}`;
+		if (isVisibleColor(color)) return color;
 	}
+	const style = window.getComputedStyle(toolbar);
+	const token = style.getPropertyValue("--color-border").trim();
+	if (isVisibleColor(token)) return token;
+	if (
+		isVisibleColor(style.borderInlineStartColor) &&
+		Number.parseFloat(style.borderInlineStartWidth) > 0
+	)
+		return style.borderInlineStartColor;
+	return "color-mix(in srgb, currentColor 14%, transparent)";
+}
 
-	return "1px solid color-mix(in srgb, currentColor 14%, transparent)";
+function isVisibleColor(color: string) {
+	return (
+		Boolean(color) &&
+		color !== "transparent" &&
+		!/^rgba\([^)]*,\s*0(?:\.0+)?\)$/.test(color) &&
+		!/\/\s*0(?:\.0+)?\s*\)$/.test(color)
+	);
 }
 
 function showFallbackAction() {

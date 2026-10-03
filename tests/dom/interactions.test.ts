@@ -5,7 +5,10 @@ import {
 	clearRenderedHighlights,
 	renderHighlight,
 } from "../../src/content/renderer";
-import { initSelectionToolbar } from "../../src/content/selection-toolbar";
+import {
+	dismissSelectionToolbar,
+	initSelectionToolbar,
+} from "../../src/content/selection-toolbar";
 import {
 	DATA_SCHEMA_VERSION,
 	type HighlightRecord,
@@ -71,10 +74,40 @@ describe("core interactions", () => {
 		) as HTMLButtonElement | null;
 		expect(action).not.toBeNull();
 		expect(action?.className).toBe("native-segment");
-		expect(action?.style.borderInlineStart).toContain("1px solid");
+		const separator = document.getElementById("highlights-native-separator");
+		expect(separator?.style.width).toBe("1px");
+		expect(separator?.getAttribute("aria-orientation")).toBe("vertical");
 		action?.click();
 		await Promise.resolve();
 		expect(capturedText).toBe("Useful answer");
+	});
+
+	test("separates a single transparent-bordered Ask action and preserves native presentation attributes", () => {
+		const toolbar = document.getElementById("native-toolbar") as HTMLElement;
+		toolbar.style.setProperty("--color-border", "rgba(0, 0, 0, 0.15)");
+		toolbar.innerHTML = `<button class="native-segment" data-color="primary" data-variant="ghost" data-size="sm" style="border-inline-start: 1px solid transparent"><span class="native-content">Ask ChatGPT</span></button>`;
+		initSelectionToolbar(async () => true);
+		const range = document.createRange();
+		range.setStart(document.getElementById("answer")?.firstChild as Text, 0);
+		range.setEnd(document.getElementById("answer")?.firstChild as Text, 13);
+		window.getSelection()?.addRange(range);
+		for (let index = 0; index < 2; index++) {
+			document
+				.getElementById("answer")
+				?.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+			expect(toolbar.children).toHaveLength(3);
+			const separator = toolbar.children[1] as HTMLElement;
+			const action = toolbar.children[2] as HTMLElement;
+			expect(separator.id).toBe("highlights-native-separator");
+			expect(separator.style.backgroundColor).toBe("rgba(0, 0, 0, 0.15)");
+			expect(separator.style.flex).toBe("0 0 1px");
+			expect(action.id).toBe("highlights-native-action");
+			expect(action.getAttribute("data-variant")).toBe("ghost");
+			expect(action.getAttribute("data-size")).toBe("sm");
+			expect(action.firstElementChild?.className).toBe("native-content");
+		}
+		dismissSelectionToolbar();
+		expect(toolbar.children).toHaveLength(1);
 	});
 
 	test("opens the equal-weight color palette and keeps Remove last", () => {

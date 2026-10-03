@@ -57,3 +57,50 @@ one passage selected, the summary and partially selected conversation remained
 transparent while the passage received the native 5% neutral fill. List/grid
 round-trips retained the selection and matched the displayed content to the
 native selected flags and button-surface opacity.
+
+## Native state matrix — 0.3.12
+
+The 0.3.11 review was withdrawn. The 0.3.12 build was verified locally and its
+visual result was confirmed by the user on 2026-10-03. Store submission is tracked
+in the release checklist.
+
+- Build Space checkboxes as controlled native buttons, not styled browser inputs.
+  Reuse the matching native button presentation and check/mixed SVGs, excluding
+  file identifiers and labels. Upgrade late-arriving templates in place, keeping
+  selection and keyboard focus. Route dock and bridge clicks through one toggle.
+- Put the statistics label and selection actions in a 42px flex header with the
+  native 8px horizontal inset. The checkbox lives in its separate left gutter:
+  measured size 16px, radius 2px, and 16px clear space before the statistics text.
+- Keep statistics and conversation metadata neutral, including full selection.
+  Selected passage rows use the native active neutral surface (`#f3f3f3` in the
+  inspected light theme). Merge adjoining selected corners only inside one
+  conversation and hide their internal dividers.
+- Use the named `library-row` content container for the native 32rem date-column
+  threshold. Below it, omit dates and reserve the native 36px action column;
+  above it, use the 160px date and 64px action columns. Do not borrow the classic
+  Library's viewport-based secondary-date layout for Space.
+- Insert an explicit 1px vertical separator in the selection toolbar, with a
+  visible native border token. Reject transparent button borders as separator
+  references and keep native button attributes and label wrappers.
+
+Signed-in Dia checks on 2026-10-02 covered initially hidden controls, own-row
+reveal, partial selection, adjoining selected rows, select all, Clear, list/grid
+round-trips, detail Back, and cold refresh with the existing records intact.
+Actual text selection displayed Ask ChatGPT and Highlight at equal height with
+the visible divider between them. No test passage was added or deleted.
+
+Desktop-type responsive checks measured a 449.5px row container at an 820px
+viewport: the date column was hidden, text remained 14px, and the 16px/2px
+checkbox dock remained available. Back at a 1532px viewport, the 1161.5px row
+container restored the 160px date and 64px action columns. Preview settings and
+the original native grid preference were restored; diagnostic panels were closed.
+
+Biome, TypeScript, 94 unit/DOM tests (673 assertions), build, package integrity,
+and deployed-file comparison passed. Regression coverage includes singleton
+Ask menus with transparent borders, delayed native hydration and focused-control
+reparenting, single-toggle dock activation, and compact Space selection.
+
+This is a bounded check of the reported states, not a claim that every host UI
+variant or future ChatGPT update is covered. The host's blocked telemetry
+requests also remain visible in its console; this pass does not diagnose them.
+Visual confirmation was received on 2026-10-03.
