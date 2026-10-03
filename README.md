@@ -105,6 +105,8 @@ Install the approved version from the [Chrome Web Store](https://chromewebstore.
 The source version is 0.3.12, with refreshed ChatGPT and Space support, native
 checkbox controls, corrected selection layout, and a visible toolbar separator.
 The store link serves the latest approved release.
+Version 0.3.12 was submitted for store review on October 3, 2026, with automatic
+publication after approval.
 To install the current source version:
 
 ```bash

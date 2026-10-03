@@ -129,5 +129,15 @@ fixed before review, and its draft package was replaced with 0.3.11.
 - [x] Pass 94 tests, formatter, typecheck, build, package integrity, and deployment comparison.
 - [x] Install into the existing unpacked identity and verify wide and compact desktop states in Dia.
 - [x] Obtain the user's confirmation of the locally installed candidate on 2026-10-03.
-- [ ] Publish the final approved source and upload its matching package.
-- [ ] Submit the approved update to the existing store item.
+- [x] Publish the final approved source and upload its matching package.
+- [x] Submit the approved update to the existing store item.
+
+Version 0.3.12 was submitted on 2026-10-03. The dashboard confirmed receipt and
+shows the update awaiting review, with automatic publication after approval.
+The existing approved release remains available during review.
+
+- Runtime source commit: `ad1a84a8f3cbab8b10048e19f80baa39ee47380c`.
+- Uploaded ZIP SHA-256: `7d8c1bf264cea9837d70b65adc25f4190a1bc52ebd42dbf04697a1b44220753c`.
+- Independent privacy review: passed; no private conversation data, credentials,
+  browser profile files, or local paths in the submitted package.
+- [ ] Confirm store approval and public availability of 0.3.12.
